@@ -38,7 +38,9 @@ The local simulator uses delayed geometric tag visibility, ideal velocity/yaw an
 
 ## Current dynamic policy validation
 
-The [dynamic validation report](../reports/dynamic-choreography-check.json) records seeds 7, 1 and 13 completing with no drone contact and minimum separation 1.571 m across the runs. Seed 7 travels 0.938 m / 0.731 m in X, with mean heights 1.383 m / 1.061 m. Tempo spans 0.9–1.1 and echo delay 0.8–1.6 s. These are nominal integrated physics results, not hardware measurements. This version has not been rendered into a new MP4.
+The [dynamic validation report](../reports/dynamic-choreography-check.json) records seeds 7, 1 and 13 completing with no drone contact and minimum separation 1.571 m across the runs. Seed 7 travels 0.938 m / 0.731 m in X, with mean heights 1.383 m / 1.061 m. Tempo spans 0.9–1.1 and echo delay 0.8–1.6 s. These are nominal integrated physics results, not hardware measurements. That report covers the rules-only dynamic runs; the LFM3-enabled recording is described below.
+
+The [new LFM3 video](../media/drone-duet-lfm3-ballet-krump.mp4) records a separate live-inference flight with four applied model choices, two per drone; see [its provenance](../media/drone-duet-lfm3-ballet-krump.provenance.json).
 
 ## Earlier recorded video validation
 
@@ -49,7 +51,7 @@ python -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 
 The current tests cover event-triggered response changes, observation-driven tempo/delay, rejection of single-sample cues, causal responses, captured memory, style persistence, RC holds, feedback-dependent handoffs, stale-fix freezing, deployment guards, original controller integration and a complete rigid-body flight. The seed-7 integration test requires over 70 cm of actual X travel for each drone, over 25 cm of Ballet height travel, a mean height contrast above 30 cm, sustained Ballet motion, at least three times as much stopped time for Krump, and measurable Krump braking. Increasing target amplitudes alone cannot satisfy these checks.
 
-The table below describes the existing MP4’s earlier controller, preserved with its source hashes.
+The table below describes the earlier rules-only MP4, preserved with its source hashes.
 
 | Integrated dance motion in the MP4, seed 7 | Ballet | Krump |
 | --- | --- | --- |

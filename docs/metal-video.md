@@ -1,12 +1,12 @@
 # Original organizer scene, local Metal MP4
 
-[Watch/download the duet](../media/drone-duet-ballet-krump.mp4).
+[Watch/download the LFM3 duet](../media/drone-duet-lfm3-ballet-krump.mp4) · [Earlier rules-only video](../media/drone-duet-ballet-krump.mp4).
 
 The user approved using the organizers’ scene/code with a local renderer after NVIDIA Isaac Sim proved incompatible with this Apple M4 Mac. This video is rendered by macOS’s built-in `/usr/bin/usdrecord --renderer Metal`, using Apple’s Hydra/Storm USD renderer. It is not claimed to be NVIDIA RTX output.
 
 ## Result
 
-H.264 MP4, 1280×720, 24 fps, 1,064 frames, 44.33 seconds, with stereo AAC music. The two drones start resting on their pads with motors off. After a 1.5-second ground hold, they take off half a second apart, reach hover, perform 28 seconds of Classical Ballet/Krump choreography, return to their pads, and land. Minimum 3D separation is 1.550 m; no drone-to-drone contacts were detected. Maximum tilt is 2.28°. The three leadership handoffs occur at 14.30, 21.35 and 28.35 seconds.
+H.264 MP4, 1280×720, 24 fps, 1,063 frames, 44.29 seconds, with stereo AAC music. The two drones start resting on their pads with motors off. After a 1.5-second ground hold, they take off half a second apart, reach hover, perform 28 seconds of Classical Ballet/Krump choreography, return to their pads, and land. Minimum 3D separation is 1.600 m; no drone-to-drone contacts were detected. Maximum tilt is 2.41°. The three leadership handoffs occur at 14.30, 21.35 and 28.35 seconds.
 
 The oblique camera uses the original recorder’s camera construction, positioned inside the room to reveal forward/back travel.
 
@@ -33,17 +33,17 @@ Our code supplies the autonomous mission, source-loading/portability layer, lite
 
 Floor cleanup suppresses tag IDs 1, 2, 4, 7, 11, 22 and 24 because their original mapped face intersects or lies below the added Z=0 floor. This avoids showing the partial prints seen in the earlier video. The source map and remaining tag poses are unchanged. The local geometric sensor uses the same visible subset (5, 6, 8, 9, 10, 12, 23, 25), so it does not receive fixes from hidden tags. This is a documented scene adaptation, not a correction to the physical room's calibration.
 
-The lane-bounded mission uses seeded procedural choices and measured partner response, not LFM3 or trained-policy weights. Hardware safety and transfer have not been established by this video.
+The lane-bounded mission combines measured partner responses, reactive rules and bounded phrase decisions from local LFM3-1.7B through Ollama. The model does not generate coordinates or RC commands. Hardware safety and transfer have not been established by this video.
 
 ## Dance selection and coordination
 
-The current controller additionally uses debounced movement cues to trigger early decisions, speed-adapted tempo and variable echo delay. Those changes are covered by a [separate physics report](../reports/dynamic-choreography-check.json); the shipped MP4 and its provenance remain a record of the earlier policy.
+The controller uses debounced movement cues, speed-adapted tempo and variable echo delay. Two local LFM3 agent contexts choose high-level phrases asynchronously. The new MP4 renders the actual integrated poses from the checked real-time inference run; it does not rerun or invent decisions during rendering. [Model identity, raw outputs and validation](../reports/lfm3-check.json) accompany it.
 
-**The shipped MP4 records the earlier Ballet/Krump [partner-responsive policy](choreography.md)** with Classical Ballet/Krump dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. The seed-7 recording shows 0.847 m / 0.878 m of actual forward/back travel, elevated sustained Ballet and low burst/stop Krump. There is no model inference or learning in the recording.
+**The shipped MP4 records the LFM3-enabled Ballet/Krump [partner-responsive policy](choreography.md)** with four applied model choices, two per dancer. Ari selects adagio at 10.80 s and 27.30 s; Sol selects stomp at 19.90 s and reply at 24.90 s. Five other model answers are rejected because roles changed or a captured reply was unfinished. Reactive rules fill the remaining intervals. The seed-7 recording shows 0.957 m / 0.889 m of actual forward/back travel and mean heights 1.403 m / 1.059 m. Inference ran during the simulation; rendering replays its recorded physical state. There is no training or learning.
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 
-Optional [local LFM3 phrase agents](lfm3.md) are now wired into the local recorder and Linux flight adapter. They have a separate inference/physics validation report; the existing MP4 contains no LFM inference. Physical flight remains untested.
+[Local LFM3 phrase agents](lfm3.md) are wired into the local recorder and Linux flight adapter. The earlier rules-only MP4 remains separately available with its original provenance. Physical flight remains untested.
 
 ## Reproduce
 
@@ -54,10 +54,10 @@ python3.11 -m venv .venv-metal
 source .venv-metal/bin/activate
 python -m pip install -r requirements-metal.txt
 python -m duet.bootstrap
-python -u -m duet.metal_record --music --output-dir "$PWD/outputs/metal-duet"
+python -u -m duet.metal_record --llm-model lfm3:latest --music --output-dir "$PWD/outputs/metal-duet"
 ```
 
-No Isaac/Omniverse package is required for this rendering path.
+Ollama must be running locally with `lfm3:latest` installed. No Isaac/Omniverse package is required for this rendering path. A new live inference run may select different phrases and timings; the published video is tied to its recorded responses and source hashes.
 
 The command generates `duet.usda`, `simulation.json` (actual frames, RC, tag fixes, mission decisions and contact checks), `provenance.json`, `usd-stage-port.patch`, PNG frames, `render.log`, and `drone-duet.mp4` in the output directory. For Apple USD Tools 0.24.3, numeric frame placeholders produce unpadded filenames; encoding uses `frame_%d.png`.
 
@@ -68,10 +68,10 @@ For the organizers' diagnostic panels, add `--telemetry`. This writes `drone-due
 Useful stages:
 
 ```sh
-python -u -m duet.metal_record --simulate-only
-python -u -m duet.metal_record --render-only
-python -u -m duet.metal_record --encode-only
+python -u -m duet.metal_record --simulate-only --llm-model lfm3:latest
+python -u -m duet.metal_record --render-only --music
+python -u -m duet.metal_record --encode-only --music
 python -m unittest discover -s tests -v
 ```
 
-The scene/model tests verify original URDF mass, full inertia (accounting for MuJoCo’s principal-frame reordering), collision geometry, two free bodies in one world, source patch scope and expected USD scene contents. The shipped [provenance report](../media/drone-duet-ballet-krump.provenance.json) records original source hashes and output metrics. Organizer and URDF licenses remain applicable; see their `THIRD_PARTY.md`.
+The scene/model tests verify original URDF mass, full inertia (accounting for MuJoCo’s principal-frame reordering), collision geometry, two free bodies in one world, source patch scope and expected USD scene contents. The shipped [provenance report](../media/drone-duet-lfm3-ballet-krump.provenance.json) records original source hashes and output metrics. Organizer and URDF licenses remain applicable; see their `THIRD_PARTY.md`.

@@ -23,7 +23,7 @@ python -u -m duet.metal_record --render-only --music --output-dir outputs/lfm3-d
 
 Use the Python environment with `requirements-metal.txt` installed for simulation. Model-enabled simulation is paced to real time so a 28-second dance gives the asynchronous agents 28 seconds of real inference time. Omitting `--llm-model` retains the deterministic reactive policy and fast simulation.
 
-The shipped MP4 predates LFM3. Its source hashes and provenance remain unchanged. The model-enabled validation is a separate run; a new LFM3 video has not been rendered.
+The [new LFM3 MP4](../media/drone-duet-lfm3-ballet-krump.mp4) renders the exact poses from the checked inference run, with music. [Video provenance](../media/drone-duet-lfm3-ballet-krump.provenance.json) links the source hashes, model identity, real responses and video hash. The [earlier rules-only MP4](../media/drone-duet-ballet-krump.mp4) retains its original provenance.
 
 ## Checked result
 

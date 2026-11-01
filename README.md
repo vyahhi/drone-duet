@@ -2,13 +2,13 @@
 
 Autonomous choreography for two Ryze Tello EDU drones, built on the Sundai organizers’ [Action_Space](https://github.com/jaromero3rd/Action_Space) flight and simulation stack.
 
-[**Watch the 44-second duet with music**](media/drone-duet-ballet-krump.mp4) · [Video provenance](media/drone-duet-ballet-krump.provenance.json) · [Measured validation](reports/choreography-check.json)
+[**Watch the LFM3 Ballet/Krump duet with music**](media/drone-duet-lfm3-ballet-krump.mp4) · [Video provenance](media/drone-duet-lfm3-ballet-krump.provenance.json) · [Actual inference validation](reports/lfm3-check.json)
 
-The MP4 follows both drones from resting on their pads through staggered takeoff, 28 seconds of dancing, role exchanges, return and landing. It uses the organizers’ room-building code, Tello model and controller, with **MuJoCo physics and Apple Metal rendering**. The frames show integrated rigid-body motion. Physical flight remains untested.
+The MP4 follows both drones from resting on their pads through staggered takeoff, 28 seconds of dancing, role exchanges, return and landing. It uses the organizers’ room-building code, Tello model and controller, with **MuJoCo physics and Apple Metal rendering**. The frames show integrated rigid-body motion from a real-time simulation with **four applied LFM3 choices, two per dancer**, at 1280×720 / 24 fps over 44.29 seconds. Minimum separation was 1.600 m; there was no drone contact. Physical flight remains untested.
 
 The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators. Optional offboard LFM3 phrase selection is connected to the local physics recorder and Linux flight adapter.
 
-**Current controller:** optional **LFM3-1.7B through local Ollama** gives each dancer its own phrase-selection agent and short-term memory. Python retains trajectories, style, leadership and safety checks. Without `--llm-model`, sustained partner turns, rises, dips and pauses can trigger a new response before the phrase timeout. Partner speed continuously adjusts phrase tempo and echo delay. This remains centralized control with two stateful policies. The linked MP4 records the earlier Ballet/Krump policy; the new dynamic behavior has been physics-checked but has not been rendered into a new video. [Dynamic validation](reports/dynamic-choreography-check.json).
+**Current controller:** optional **LFM3-1.7B through local Ollama** gives each dancer its own phrase-selection agent and short-term memory. Python retains trajectories, style, leadership and safety checks. Without `--llm-model`, sustained partner turns, rises, dips and pauses can trigger a new response before the phrase timeout. Partner speed continuously adjusts phrase tempo and echo delay. This remains centralized control with two stateful policies. The linked MP4 records the dynamic policy with actual local LFM3 phrase decisions. The earlier rules-only video is retained separately with its original provenance. [Dynamic validation](reports/dynamic-choreography-check.json).
 
 ## The duet
 
@@ -28,7 +28,7 @@ Style persists through every response. Ballet smooths and elevates the partner�
 
 They trade the lead after sustained measured engagement, and the leader slows when the partner lags. Reactive rules provide the default behavior and fallback. With `--llm-model lfm3:latest`, two separate agents choose bounded phrases using local model inference. Both policies share state on the flight computer. The drones infer partner motion through their room-relative position estimates; they do not visually recognize each other or communicate directly.
 
-Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the recorded MP4’s seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stayed **35 cm higher on average**; Krump’s mean speed dropped **70% across its braking holds**. See [policy details](docs/choreography.md) for measured motion and interaction rules.
+Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the new LFM3 clip, the drones travel **0.96 m and 0.89 m forward/back**, with Ballet **34 cm higher on average**. Exact model responses and motion measurements accompany the video. See [policy details](docs/choreography.md) for measured motion and interaction rules.
 
 Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The video uses an excerpt with loudness adjustment and fades. Music is added during encoding and does not drive or synchronize flight. [Full attribution and edit details](media/music/README.md).
 
@@ -76,9 +76,9 @@ The mission performs staggered takeoff, acquires localization, settles, dances f
 
 ## Simulation and MP4
 
-The local pipeline executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. It runs on Apple Silicon without an NVIDIA GPU, using **MuJoCo CPU physics + Apple Hydra Metal rendering**. This is a local port of the organizer stack; the recording is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-ballet-krump.provenance.json) accompany the clip.
+The local pipeline executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. It runs on Apple Silicon without an NVIDIA GPU, using **MuJoCo CPU physics + Apple Hydra Metal rendering**. This is a local port of the organizer stack; the recording is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-lfm3-ballet-krump.provenance.json) accompany the clip.
 
-The MP4 shows the earlier Ballet/Krump policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
+The new MP4 shows the dynamic Ballet/Krump policy with actual LFM3 choices, measured-motion responses and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
 
 Requires Apple Silicon macOS with `/usr/bin/usdrecord` supporting Metal, Python 3.11, Git, and ffmpeg/ffprobe on PATH:
 
@@ -91,8 +91,8 @@ python -m duet.bootstrap
 # Run physics, record decisions and export USD poses without rendering a video.
 python -u -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 
-# Simulate, render and encode a clean MP4 using macOS USD Metal and ffmpeg.
-python -u -m duet.metal_record --music --output-dir outputs/duet-video
+# Simulate with real LFM3 inference, then render and encode with music.
+python -u -m duet.metal_record --llm-model lfm3:latest --music --output-dir outputs/duet-video
 
 # Re-encode existing frames with music, without rerunning physics or rendering.
 python -u -m duet.metal_record --encode-only --music --output-dir outputs/duet-video

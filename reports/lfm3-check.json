@@ -46,7 +46,7 @@
   "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
   "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
   "physical_flight_tested": false,
-  "video_rendered": false,
+  "video_rendered": true,
   "completed": true,
   "seed": 7,
   "duration_s": 44.291666666666664,
@@ -264,6 +264,11 @@
   "limitations": [
     "One nominal live model-backed physics flight; not hardware validation or a robustness qualification.",
     "Model reasons are generated text; action validity and safety are enforced by Python.",
-    "The existing MP4 predates LFM3 and is unchanged."
-  ]
+    "The earlier rules-only MP4 and its provenance are preserved separately."
+  ],
+  "video": {
+    "path": "../media/drone-duet-lfm3-ballet-krump.mp4",
+    "sha256": "d30b1522b1d06b485f365635d2ca704f97a6c15ca2f76ea44849fb2aaa91fe3c",
+    "provenance": "../media/drone-duet-lfm3-ballet-krump.provenance.json"
+  }
 }
