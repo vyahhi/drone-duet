@@ -37,7 +37,9 @@ The lane-bounded mission uses seeded procedural choices and measured partner res
 
 ## Dance selection and coordination
 
-**The shipped MP4 uses the current [partner-responsive policy](choreography.md)** with Classical Ballet/Krump dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. The seed-7 recording shows 0.847 m / 0.878 m of actual forward/back travel, elevated sustained Ballet and low burst/stop Krump. There is no model inference or learning in the recording.
+The current controller additionally uses debounced movement cues to trigger early decisions, speed-adapted tempo and variable echo delay. Those changes are covered by a [separate physics report](../reports/dynamic-choreography-check.json); the shipped MP4 and its provenance remain a record of the earlier policy.
+
+**The shipped MP4 records the earlier Ballet/Krump [partner-responsive policy](choreography.md)** with Classical Ballet/Krump dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. The seed-7 recording shows 0.847 m / 0.878 m of actual forward/back travel, elevated sustained Ballet and low burst/stop Krump. There is no model inference or learning in the recording.
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 

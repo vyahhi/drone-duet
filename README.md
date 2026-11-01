@@ -8,6 +8,8 @@ The MP4 follows both drones from resting on their pads through staggered takeoff
 
 The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators.
 
+**Current controller:** sustained partner turns, rises, dips and pauses can trigger a new response before the phrase timeout. Partner speed continuously adjusts phrase tempo and echo delay. This remains centralized control with two stateful policies. The linked MP4 records the earlier Ballet/Krump policy; the new dynamic behavior has been physics-checked but has not been rendered into a new video. [Dynamic validation](reports/dynamic-choreography-check.json).
+
 ## The duet
 
 | Dancer | Human dance inspiration | Movement vocabulary |
@@ -15,18 +17,18 @@ The Python controller runs on a **shared Linux flight computer** and sends takeo
 | Ari, orange pad | Classical Ballet | Sustained adagio arcs, elevated arabesques, sweeping port de bras |
 | Sol, cyan pad | Krump | Low stomps, forceful traveling jabs, chest-pop accents and deliberate stops |
 
-Style persists through every response. Ballet smooths and elevates the partner’s movement into continuous curves. Krump amplifies horizontal movement into stepped accents, stays low, and sends zero RC for 0.65 seconds every two seconds to brake into a hold. These are whole-drone interpretations of human dance styles.
+Style persists through every response. Ballet smooths and elevates the partner’s movement into continuous curves. Krump amplifies horizontal movement into stepped accents, stays low, and sends zero RC for 0.65 of every two phrase seconds to brake into a hold. These are whole-drone interpretations of human dance styles.
 
 | Interaction | What the dancer does |
 | --- | --- |
 | Lead | Chooses a phrase from its own vocabulary using partner motion and move history |
 | Mirror | Reflects the partner’s measured movement, interpreted in its own style |
-| Echo | Responds to the partner’s measured movement from 1.2 seconds earlier |
+| Echo | Responds to the partner’s measured movement from 0.8–1.6 seconds earlier, depending on partner speed |
 | Reply | Captures a three-second partner motif and transforms it into a four-second answer |
 
 They trade the lead after sustained measured engagement, and the leader slows when the partner lags. This is feedback-driven, rule-based autonomy; no LFM inference is implemented. Both policies share state on the flight computer. The drones infer partner motion through their room-relative position estimates; they do not visually recognize each other or communicate directly.
 
-Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the nominal seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stayed **35 cm higher on average**; Krump’s mean speed dropped **70% across its braking holds**. See [policy details](docs/choreography.md) for measured motion and interaction rules.
+Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the recorded MP4’s seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stayed **35 cm higher on average**; Krump’s mean speed dropped **70% across its braking holds**. See [policy details](docs/choreography.md) for measured motion and interaction rules.
 
 Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The video uses an excerpt with loudness adjustment and fades. Music is added during encoding and does not drive or synchronize flight. [Full attribution and edit details](media/music/README.md).
 
@@ -61,7 +63,7 @@ The mission performs staggered takeoff, acquires localization, settles, dances f
 
 The local pipeline executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. It runs on Apple Silicon without an NVIDIA GPU, using **MuJoCo CPU physics + Apple Hydra Metal rendering**. This is a local port of the organizer stack; the recording is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-ballet-krump.provenance.json) accompany the clip.
 
-The MP4 shows the current Ballet/Krump policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
+The MP4 shows the earlier Ballet/Krump policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
 
 Requires Apple Silicon macOS with `/usr/bin/usdrecord` supporting Metal, Python 3.11, Git, and ffmpeg/ffprobe on PATH:
 
@@ -92,7 +94,7 @@ python -m unittest discover -s tests -v
 python -m duet.record --prepare-only
 ```
 
-The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks; ffmpeg/ffprobe enable the music-encoding check. **All 29 tests pass locally, and both GitHub CI jobs pass.** The checks cover style contrast in actual simulated motion, measured-motion responses, braking holds, takeoff/landing, flight guards, audio encoding and credits. Three nominal physics runs completed without drone contact; their smallest separation was **1.502 m**. These checks use simulated sensing and do not replace physical flight validation.
+The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks; ffmpeg/ffprobe enable the music-encoding check. **All 31 tests pass locally.** The checks cover style contrast in actual simulated motion, measured-motion responses, braking holds, takeoff/landing, flight guards, audio encoding and credits. Three nominal runs of the dynamic policy completed without drone contact; their smallest separation was **1.571 m**. The earlier video’s validation remains in its own provenance report. These checks use simulated sensing and do not replace physical flight validation.
 
 ## Code
 

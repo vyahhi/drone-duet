@@ -43,7 +43,7 @@ class Style:
 
 
 STYLES = (
-    Style("Ari", "Classical Ballet", ("adagio", "arabesque", "port_de_bras"), 12.0, (0.1, 0.7, 0.3), 0.32),
+    Style("Ari", "Classical Ballet", ("adagio", "arabesque", "port_de_bras"), 10.0, (0.1, 0.7, 0.3), 0.32),
     Style("Sol", "Krump", ("stomp", "jab", "chest_pop"), 12.0, (0.3, 0.1, 0.8), 0.80),
 )
 
@@ -64,6 +64,14 @@ class Dancer:
     observed: str = "still"
     response_offset: tuple = (0.0, 0.0, 0.0)
     hold: bool = False
+    partner_speed: float = 0.0
+    tempo: float = 1.0
+    echo_delay: float = 1.2
+    accent_phase: float = 0.0
+    stable_motion: str = "still"
+    candidate_motion: str = "still"
+    candidate_since: float = 0.0
+    cue: str = ""
 
 
 class Choreography:
@@ -103,10 +111,31 @@ class Choreography:
                             "name": d.profile.name, "style": d.profile.style, "move": d.mode,
                             "gesture": d.gesture, "partner": p.mode, "leader": self.leader,
                             "observed_partner_motion": d.observed, "reason": d.reason,
+                            "trigger": d.cue or "phrase boundary",
+                            "tempo": round(d.tempo, 3), "echo_delay_s": round(d.echo_delay, 3),
                             "scores": {k: round(v, 3) for k, v in d.scores.items()}})
+
+    def _observe(self, i, t, dt):
+        """Debounce measured changes; continuously adapt without resetting clocks."""
+        d = self.dancers[i]
+        d.observed, speed = self.motion(1 - i, t)
+        alpha = 1 - math.exp(-dt / 0.6)
+        d.partner_speed += alpha * (speed - d.partner_speed)
+        energy = min(1.0, d.partner_speed / 0.12)
+        d.tempo = 0.90 + 0.20 * energy
+        d.echo_delay = 1.60 - 0.80 * energy
+        d.accent_phase += dt * d.tempo
+        if d.observed != d.candidate_motion:
+            d.candidate_motion, d.candidate_since = d.observed, t
+        dwell = 0.60 if d.candidate_motion == "still" else 0.30
+        if d.candidate_motion != d.stable_motion and t - d.candidate_since >= dwell:
+            previous, d.stable_motion = d.stable_motion, d.candidate_motion
+            d.cue = ("partner paused" if d.stable_motion == "still" else
+                     f"partner changed from {previous} to {d.stable_motion}")
 
     def _lead(self, i, t, wall_t, reason):
         d = self.dancers[i]
+        continuing = d.mode == "lead" and bool(d.gesture)
         d.observed, _ = self.motion(1 - i, t)
         # Novelty competes with a style-specific response to the partner's motion.
         preferred = ({"rise": "arabesque", "dip": "adagio", "side": "port_de_bras", "still": "adagio"} if i == 0 else
@@ -115,7 +144,9 @@ class Choreography:
                    + d.rng.uniform(0, 0.15) - (0.5 if g == d.gesture else 0)
                    for g in d.profile.gestures}
         d.gesture = max(d.scores, key=d.scores.get)
-        d.mode, d.since, d.phrase = "lead", t, 0.0
+        d.mode, d.since = "lead", t
+        if not continuing:
+            d.phrase = 0.0
         d.visits[d.gesture] = d.visits.get(d.gesture, 0) + 1
         d.reason = reason
         self._record(i, t, wall_t)
@@ -127,6 +158,10 @@ class Choreography:
         cues = {"mirror": 0.6 if speed > 0.018 else 0.0,
                 "echo": 0.5 if enough_history else -2.0,
                 "reply": (0.8 if speed < 0.035 else 0.15) if enough_history else -2.0}
+        if d.cue == "partner paused" and enough_history:
+            cues["reply"] += 1.2
+        elif d.cue:
+            cues["mirror"] += 0.5
         d.scores = {}
         for mode, bias in zip(MOVES[1:], d.profile.response_bias):
             d.scores[mode] = bias + cues[mode] + 0.8 / (1 + d.visits.get(mode, 0)) \
@@ -140,7 +175,7 @@ class Choreography:
         d.reply = [(sample_t - max(self.history[0][0], t - 3), offsets[1 - i])
                    for sample_t, offsets in self.history if sample_t >= t - 3]
         d.reason = {"mirror": "reflect partner's measured motion across the two lanes",
-                    "echo": "follow partner's measured motion 1.2 seconds later",
+                    "echo": "follow partner's measured motion with a speed-adapted delay",
                     "reply": "answer a recorded partner motif in my own style"}[d.mode]
         self._record(i, t, wall_t)
 
@@ -171,7 +206,7 @@ class Choreography:
         else:
             # Strong horizontal accents and a low center; holding is enforced by
             # the actual RC adapter as well as the target generator.
-            d.response_offset = bounded((round(1.60 * x / 0.18) * 0.18,
+            d.response_offset = bounded((round(2.00 * x / 0.18) * 0.18,
                                          round(y / 0.12) * 0.12, -0.24 + 0.30 * z))
         return d.response_offset
 
@@ -189,7 +224,8 @@ class Choreography:
             "chest_pop": ((0.62, -0.62, -0.62, 0.62)[accent], 0.32,
                           (-0.08, -0.38, -0.08, -0.38)[accent]),
         }
-        return bounded(offsets[d.gesture])
+        x, y, z = offsets[d.gesture]
+        return bounded((1.2 * x, y, z))
 
     def step(self, states, t, wall_t):
         offsets = tuple(tuple(s.position[k] - h[k] for k in range(3)) for s, h in zip(states, self.homes))
@@ -199,6 +235,8 @@ class Choreography:
             self.started = True
             self._lead(0, t, wall_t, "invite partner with my own style")
             self._respond(1, t, wall_t, initial=True)
+        for i in range(2):
+            self._observe(i, t, dt)
         follower = 1 - self.leader
         lead = self.dancers[self.leader]
         _, speed = self.motion(follower, t)
@@ -211,29 +249,34 @@ class Choreography:
             self._respond(previous, t, wall_t)
             self.events.append({"t": round(wall_t, 3), "dance_t": round(t, 3), "handoff": [previous, follower],
                                 "reason": "partner moving for at least 0.8 s; leadership lease released"})
-        elif t - lead.since >= 7.0:
-            self._lead(self.leader, t, wall_t, "vary my motif using partner motion and my move history")
+        elif t - lead.since >= 7.0 or (lead.cue and t - lead.since >= 5.0):
+            self._lead(self.leader, t, wall_t, lead.cue or "vary my motif using partner motion and my move history")
+        self.dancers[self.leader].cue = ""
         follower = 1 - self.leader
         follow = self.dancers[follower]
-        if t - follow.since >= 4.0:
+        # Preserve a captured four-second reply; other responses can change after
+        # three seconds when a debounced movement cue arrives. Timeouts prevent stalling.
+        dwell = 4.0 if follow.mode == "reply" else 3.0
+        if t - follow.since >= 4.0 or (follow.cue and t - follow.since >= dwell):
             self._respond(follower, t, wall_t)
+            follow.cue = ""
         result = []
         for i, d in enumerate(self.dancers):
             partner = self.sample(t, 1 - i)
             d.observed, _ = self.motion(1 - i, t)
             # A two-second burst/stop articulation persists in every Krump mode,
             # including mirrors. Ballet keeps a continuous sustained line.
-            d.hold = d.profile.style == "Krump" and t % 2.0 >= 1.35
+            d.hold = d.profile.style == "Krump" and d.accent_phase % 2.0 >= 1.35
             if d.mode == "lead":
                 # Slow an invitation when the partner lags instead of blindly keeping time.
                 mismatch = math.dist(reflect(offsets[i]), partner)
-                d.phrase_rate = 0.70 if mismatch > 0.30 else 1.0
+                d.phrase_rate = (0.70 if mismatch > 0.30 else 1.0) * d.tempo
                 d.phrase += dt * d.phrase_rate
                 offset = self._lead_offset(d)
             elif d.mode == "mirror":
                 offset = self._interpret_response(d, reflect(partner), dt)
             elif d.mode == "echo":
-                offset = self._interpret_response(d, reflect(self.sample(t - 1.2, 1 - i)), dt)
+                offset = self._interpret_response(d, reflect(self.sample(t - d.echo_delay, 1 - i)), dt)
             else:
                 offset = self._interpret_response(d, self._reply_offset(d, t), dt)
             result.append(tuple(h + v for h, v in zip(self.homes[i], lane_offset(offset, i))))
@@ -243,4 +286,7 @@ class Choreography:
         return [{"name": d.profile.name, "style": d.profile.style, "mode": d.mode,
                  "gesture": d.gesture, "reason": d.reason, "observed_partner_motion": d.observed,
                  "phrase_rate": d.phrase_rate, "target_speed_mps": d.profile.target_speed,
+                 "tempo": d.tempo, "echo_delay_s": d.echo_delay,
+                 "partner_speed_mps": d.partner_speed, "stable_partner_motion": d.stable_motion,
+                 "pending_cue": d.cue,
                  "hold": d.hold} for d in self.dancers]
