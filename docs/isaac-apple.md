@@ -56,4 +56,4 @@ An actual NVIDIA package compatibility check was attempted with:
 
 The NVIDIA installer found Linux ARM64, Linux x86_64 and Windows x86_64 wheels, and failed with `Didn't find wheel for isaacsim 5.1.0.0` on Darwin ARM64. No Isaac Sim package or NVIDIA driver was installed. Official [Isaac Sim requirements](https://docs.isaacsim.omniverse.nvidia.com/latest/installation/requirements.html) require supported NVIDIA RTX hardware; Apple Metal is not an equivalent runtime for those binaries.
 
-This installation makes local MLX quadcopter experiments and the original Tello controller usable. An MP4 made with another renderer would require a separate port and would not be the organizers’ original Isaac visualization. No such substitution or MP4 is claimed here.
+This installation makes local MLX quadcopter experiments and the original Tello controller usable. The user subsequently approved a separate local rendering port: [the Metal/MuJoCo MP4](metal-video.md) now executes the organizers’ USD scene code and original controller on this Mac. It does not use this community port’s reference quadcopter physics and does not claim to be NVIDIA Isaac Sim output.

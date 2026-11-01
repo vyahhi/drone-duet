@@ -1,0 +1,122 @@
+{
+  "scene": {
+    "organizer_repository": "https://github.com/jaromero3rd/Action_Space",
+    "revision": "cd6536a458c3ba034a727ea00f57adac6bed9471",
+    "original_scene_functions": [
+      "spawn_room",
+      "spawn_tag",
+      "spawn_wall",
+      "_preview_material",
+      "_room_walls",
+      "setup_camera"
+    ],
+    "scene_port": "Explicit USD stage parameter; duet camera framing; grayscale tags expanded losslessly to RGB for Metal; local lighting",
+    "drone_geometry": "literal primitives, offsets and materials from original tello.urdf; no custom drone model",
+    "renderer": "/usr/bin/usdrecord --renderer Metal (Apple Hydra), not NVIDIA RTX",
+    "source_sha256": {
+      "simulation_infra/source/action_space_kit/action_space_kit/tags/spawn.py": "f9377bd2c5a92edfb2828b6e81843e4fe11159b9d4fdf8e1751a1a61464e6e65",
+      "simulation_infra/source/action_space_kit/action_space_kit/tags/room_map.py": "5f8e172864f76dcbaffa37e55d17560f8bc04070b0d67ae67843ef4cd1ac1080",
+      "simulation_infra/source/action_space_kit/action_space_kit/tags/textures.py": "298a0b2f89ebe7d5e390f623bf421fcd0405a4eb6a8014e06276ec7a152dd358",
+      "simulation_infra/source/action_space_kit/action_space_kit/tasks/direct/tello_room/tello_room_env.py": "8b68c765e33e82f52e85d73b474f630341e57230a24c2569b2e13d5ee39e72ee",
+      "simulation_infra/scripts/record_room.py": "2ba77201fc2eea787e7e5bd7c2ce6cd5a4f7e17286b622ef9e35dbd0836d44a2",
+      "simulation_infra/assets/tello/tello.urdf": "06ed9cfe0904b6c468b779a4cdd9979069a188fc1273b680fca84e76c2c9a56b"
+    }
+  },
+  "source_revision_verified": "cd6536a458c3ba034a727ea00f57adac6bed9471",
+  "simulation": {
+    "renderer": "Apple Hydra Metal / usdrecord",
+    "physics": "MuJoCo CPU, not Isaac PhysX",
+    "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
+    "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
+    "velocity_observation": "ideal simulator velocity; not camera-estimated",
+    "start": "already hovering; takeoff excluded",
+    "physical_flight_tested": false,
+    "fps": 24,
+    "frame_count": 829,
+    "duration_s": 34.541666666666664,
+    "dance_seconds": 28,
+    "seed": 7,
+    "min_separation_m": 1.3979215621948242,
+    "max_tilt_deg": 1.9684220872088174,
+    "drone_contacts": false,
+    "completed": true,
+    "wall_seconds_simulating": 38.25126520800404,
+    "events": [
+      {
+        "t": 0.15,
+        "phase": "settle"
+      },
+      {
+        "t": 1.15,
+        "phase": "dance"
+      },
+      {
+        "t": 1.15,
+        "drone": 0,
+        "move": "breath",
+        "partner": "canon"
+      },
+      {
+        "t": 5.1,
+        "drone": 1,
+        "move": "mirror",
+        "partner": "breath"
+      },
+      {
+        "t": 9.15,
+        "drone": 0,
+        "move": "canon",
+        "partner": "mirror"
+      },
+      {
+        "t": 13.1,
+        "drone": 1,
+        "move": "canon",
+        "partner": "canon"
+      },
+      {
+        "t": 17.1,
+        "drone": 0,
+        "move": "breath",
+        "partner": "canon"
+      },
+      {
+        "t": 21.1,
+        "drone": 1,
+        "move": "breath",
+        "partner": "breath"
+      },
+      {
+        "t": 25.1,
+        "drone": 0,
+        "move": "mirror",
+        "partner": "breath"
+      },
+      {
+        "t": 29.1,
+        "phase": "return"
+      }
+    ]
+  },
+  "controller_source_sha256": {
+    "simulation_infra/source/action_space_kit/action_space_kit/control/tello_dynamics.py": "03ee1e5304d1e07d82e2c21160993a8cf54d882e3c99d6053acd57e980d380cf",
+    "simulation_infra/source/action_space_kit/action_space_kit/control/rc_action.py": "2b6bd5f4c25a677a2d0c27f0aac860faf35aa37ba9b4fd42dd231807281e2f9b",
+    "simulation_infra/source/action_space_kit/action_space_kit/tags/sensing.py": "5757ab07bb46a0d04573b1b34864f5c11bea5d6beffaac9cf368e199b4caa58b",
+    "simulation_infra/source/action_space_kit/action_space_kit/control/tello_motion_fit.yaml": "5c3c401f9be47eb4211703871f80bb624b6a52bd2cf4f35ea57294cf352b74d7",
+    "drone_deployment_infra/swarm_ops/swarm_formation.py": "57f38b9dae656518cbfa1237ab74bf8616964bfd1c80e3e21298e4df9c00ecf7",
+    "drone_deployment_infra/config/map.yaml": "ec9345f3428f6949acc73af2a87a51854e8c6c800295d2f933b636fdd0f0e78e",
+    "drone_deployment_infra/config/tags.yaml": "6ef421d802b5d596e4a44d510241c382c0c2fa0e1c7ae3ceae419734184c1f92"
+  },
+  "video": {
+    "path": "drone-duet-metal.mp4",
+    "sha256": "53d9f1468fa03b8ba3513bd18c95391843d53bcd6de6b0fb101884dac75051c3",
+    "full_decode_check": "passed",
+    "visual_check_frames": [
+      0,
+      288,
+      576,
+      816
+    ]
+  },
+  "physical_flight_tested": false
+}

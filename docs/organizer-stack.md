@@ -2,6 +2,8 @@
 
 Organizer approval for two drones flying has been granted. No physical flight has been performed by this project. This is an implemented, locally tested adapter awaiting hardware and Isaac validation.
 
+**Local video is now available:** the user-approved [Metal/MuJoCo port](metal-video.md) executes the organizers’ USD scene and controller code on this Mac. The NVIDIA-specific recording path below remains available for a compatible host.
+
 ## Original 3D visualization → MP4
 
 The renderer is the organizers’ [`simulation_infra/scripts/record_room.py`](https://github.com/jaromero3rd/Action_Space/blob/cd6536a458c3ba034a727ea00f57adac6bed9471/simulation_infra/scripts/record_room.py), at pinned commit `cd6536a458c3ba034a727ea00f57adac6bed9471`. It uses their mapped room, converted Tello USD asset, PhysX simulation, fitted RC firmware dynamics, Isaac Kit viewport camera, telemetry overlay, and ffmpeg MP4 writer.
@@ -39,7 +41,7 @@ python3 -m duet.bootstrap
 python3 -m duet.record --prepare-only
 ```
 
-**No MP4 has been rendered or visually checked yet.** The [community Apple port is installed and verified](isaac-apple.md), but it lacks the original Omniverse renderer. NVIDIA Isaac Sim has no compatible macOS package, and no remote GPU host is available. The browser recording is not a substitute for the requested original-renderer MP4.
+The NVIDIA/Omniverse MP4 path remains unavailable on this Mac. The user approved using the organizers’ scene/code with a local renderer, and the separate [Metal/MuJoCo video](metal-video.md) has now been rendered, decoded and visually inspected. It is not a browser capture or a claim that NVIDIA Isaac Sim runs on macOS.
 
 ## Physical two-Tello duet
 

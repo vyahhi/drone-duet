@@ -6,7 +6,9 @@ A live experiment in autonomous choreography, built for Sundai’s drone hack at
 
 The project now also includes a **two-Tello flight adapter** and an **Isaac MP4 recorder using the organizers’ original simulation code**. Organizer approval for two drones flying has been granted. The flight/Isaac controller uses a separate, smaller, lane-bounded dance suited to tag tracking; it does not send the browser’s large trajectories to hardware.
 
-**Validation status:** browser tests and Python mission/controller tests pass. The experimental community IsaacLab-MLX port now runs on this Mac’s Apple M4 GPU: its original quadcopter example and 34 runtime/quadcopter tests passed. The organizers’ pure-Torch Tello controller also runs on Apple MPS. Physical flight and the full Isaac Sim room/renderer remain unvalidated. No original-renderer MP4 has been produced: NVIDIA Isaac Sim has no compatible macOS package, and the community port lacks the required renderer.
+**Video delivered:** [34.5-second drone duet MP4](media/drone-duet-metal.mp4), rendered locally from the organizers’ actual USD room-building code and original Tello URDF. It uses their Tello firmware, RC controller and tag sensor model, with our autonomous duet mission. As approved for this Mac, the backend is **MuJoCo physics + Apple Hydra Metal**, rather than NVIDIA PhysX/RTX. See [render instructions and provenance](docs/metal-video.md).
+
+**Validation status:** browser and Python mission/controller tests pass, including local rigid-body/scene checks. The experimental community IsaacLab-MLX port also runs on this Mac’s M4 GPU; its original quadcopter example and 34 runtime/quadcopter tests pass. Physical flight and the NVIDIA Isaac Sim backend remain unvalidated.
 
 See [Apple Silicon installation and verified limits](docs/isaac-apple.md).
 

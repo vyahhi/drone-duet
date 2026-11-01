@@ -1,0 +1,5 @@
+# Local port of the organizers' scene/controller. Requires macOS /usr/bin/usdrecord.
+-r requirements-flight.txt
+torch>=2.7,<3
+usd-core==26.11
+mujoco==3.17.0

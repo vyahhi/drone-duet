@@ -1,0 +1,16 @@
+--- original/spawn.py
++++ portable/spawn.py
+@@ -102,12 +102,10 @@
+     UsdShade.MaterialBindingAPI.Apply(cube.GetPrim()).Bind(mat)
+ 
+ 
+-def spawn_room(root: str, tags: dict[int, Tag], walls: list[Wall]) -> None:
++def spawn_room(stage, root: str, tags: dict[int, Tag], walls: list[Wall]) -> None:
+     """Spawn every tag and wall under ``root`` on the current stage."""
+-    import omni.usd
+     from pxr import UsdGeom
+ 
+-    stage = omni.usd.get_context().get_stage()
+     UsdGeom.Xform.Define(stage, root)
+     for wall in walls:
+         spawn_wall(stage, root, wall)
