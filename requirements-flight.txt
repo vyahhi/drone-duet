@@ -1,0 +1,5 @@
+numpy>=1.26,<2
+opencv-python>=4.10,<4.12
+PyYAML>=6,<7
+pupil-apriltags>=1.0.4,<2
+av>=13,<17

@@ -1,0 +1,5 @@
+# Install into the organizers' EXISTING Isaac Python environment, not a new CPU venv.
+-r requirements-flight.txt
+stable-baselines3>=2.6,<3
+imageio-ffmpeg>=0.5,<0.7
+toml>=0.10,<1

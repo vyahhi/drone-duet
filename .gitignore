@@ -6,3 +6,8 @@ dist/
 .DS_Store
 *.log
 artifacts/
+outputs/
+vendor/
+.venv*/
+__pycache__/
+*.pyc

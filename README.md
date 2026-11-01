@@ -2,9 +2,20 @@
 
 **Two independent minds. One shared rhythm.**
 
-A live 3D experiment in autonomous choreography, built for Sundai’s drone hack at Harvard i-labs, November 1, 2026. Two Tello-inspired virtual drones improvise a duet. There are no pilot commands, audience prompts, physical flight commands, or prewritten sequences.
+A live experiment in autonomous choreography, built for Sundai’s drone hack at Harvard i-labs, November 1, 2026. The browser demo shows two Tello-inspired virtual drones improvising a duet.
 
-The demo runs on a Mac or other laptop with a WebGL2-capable browser. It does not require Isaac Lab, an NVIDIA GPU, or drone hardware.
+The project now also includes a **two-Tello flight adapter** and an **Isaac MP4 recorder using the organizers’ original simulation code**. Organizer approval for two drones flying has been granted. The flight/Isaac controller uses a separate, smaller, lane-bounded dance suited to tag tracking; it does not send the browser’s large trajectories to hardware.
+
+**Validation status:** browser tests and Python mission/controller tests pass. Physical flight and Isaac execution have not been validated. No original-renderer MP4 has been produced: this Mac has no NVIDIA GPU/Isaac installation and no GPU host is available.
+
+See [physical flight and original-renderer instructions](docs/organizer-stack.md). Prepare the organizers’ pinned recorder locally with:
+
+```sh
+python3 -m duet.bootstrap
+python3 -m duet.record --prepare-only
+```
+
+The browser demo below runs on a Mac or other laptop with WebGL2; it does not require Isaac or drone hardware.
 
 ## Run
 
@@ -91,10 +102,10 @@ Tests simulate three tracks across multiple seeds, checking separation and finit
 
 ## Relationship to the event toolkit
 
-Reviewed alongside [jaromero3rd/drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks). That repository provides real Tello networking, AprilTag localization, and a single-drone Isaac Lab race scaffold. Its documented course allows only one drone in the air at a time; its multi-drone orchestration was intentionally omitted.
+The browser scene is independently implemented. The Python adapter uses the organizers’ full [Action_Space](https://github.com/jaromero3rd/Action_Space) repository at `cd6536a458c3ba034a727ea00f57adac6bed9471`, which contains the multi-drone infrastructure omitted from the smaller [drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks) kit.
 
-This project is an independently implemented browser simulation and does not import or execute that toolkit. It cannot arm or fly a physical drone. Extending it to Isaac Lab would require a two-vehicle scene, vehicle dynamics, and an adapter from these move targets to validated velocity controllers. Physical duet flight would additionally require organizer authorization and a separate flight-safety implementation.
+`duet/fly.py --fly` can send physical takeoff, RC and landing commands through the organizers’ Linux multi-dongle stack. Default mode only performs preflight. `duet/record.py` runs the original Isaac room recorder with audited policy/configuration hooks, retaining its Tello assets, physics, viewport capture and ffmpeg encoder. Source hashes and a patch accompany each prepared recording. The third-party checkout is fetched separately and is not redistributed or relicensed here.
 
 ## License
 
-MIT. Drone geometry and soundtrack are original procedural assets; no DJI branding or model assets are included. Three.js and Vite retain their respective licenses.
+Our code is MIT. Browser drone geometry and soundtrack are original procedural assets. Three.js and Vite retain their respective licenses. Organizer code and Tello assets are separate dependencies under their own terms; see [provenance](docs/organizer-stack.md).
