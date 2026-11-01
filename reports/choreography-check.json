@@ -1,30 +1,42 @@
 {
   "physics": "MuJoCo with original Tello controller and delayed geometric room-tag visibility",
   "hardware_tested": false,
-  "video_rendered": false,
+  "video_rendered": true,
   "source_sha256": {
-    "duet/choreography.py": "6c9f8747a2ec3505a478966127a7c31a25716a506f10ff417fa5f2a0388f6a11",
-    "duet/mission.py": "fdfb949385f4922eae67d137f02eef6f52d8697e9f1a55b38787bc9e1cf7683c",
-    "duet/upstream.py": "2de25e34dd35dff62508d01bf302dd18c966946f668956c0c492de6170906b81"
+    "duet/choreography.py": "297ba5e533665d32d7fee9b1be82b8694815127428273f08fb6810aef0032210",
+    "duet/mission.py": "93c0c9c742b07ce0f15fc4b4d0a7494e28334f4d5b60d774d6bfb008952262f0",
+    "duet/upstream.py": "16defc85057aa923119c19dbf256d2341e2cea16d1e5411b6e23d38d8d5f6bf3"
   },
   "runs": [
     {
       "seed": 7,
       "completed": true,
-      "min_separation_m": 1.600000023841858,
-      "max_tilt_deg": 2.020986448707455,
+      "min_separation_m": 1.550234079360962,
+      "max_tilt_deg": 2.280893196069505,
       "drone_contacts": false,
       "actual_dance_xyz_peak_to_peak_m": [
         [
-          0.7603635515880898,
-          0.3722517275925351,
-          0.28090254885418875
+          0.8465021455339001,
+          0.23875768174759937,
+          0.27846199934388327
         ],
         [
-          0.8689838950081885,
-          0.3850687994785702,
-          0.10046602715135
+          0.8784187114571482,
+          0.25491190489557725,
+          0.270864819678553
         ]
+      ],
+      "mean_dance_height_m": [
+        1.4049108908389787,
+        1.0590805638654668
+      ],
+      "fraction_speed_below_0_025_mps": [
+        0.017889087656529516,
+        0.12701252236135957
+      ],
+      "krump_hold_mean_start_end_speed_mps": [
+        0.11035166888903628,
+        0.032751029127971364
       ],
       "handoffs": [
         {
@@ -55,23 +67,23 @@
           "reason": "partner moving for at least 0.8 s; leadership lease released"
         }
       ],
-      "choices": [
+      "events": [
         {
           "t": 7.35,
           "dance_t": 0.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "hop",
-          "partner": "lead",
+          "gesture": "adagio",
+          "partner": "mirror",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "invite partner with my own style",
           "scores": {
-            "hop": 1.549,
-            "squat": 1.023,
-            "sweep": 1.098
+            "adagio": 1.549,
+            "arabesque": 1.023,
+            "port_de_bras": 1.098
           }
         },
         {
@@ -79,17 +91,17 @@
           "dance_t": 0.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "mirror",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
-            "mirror": 1.436,
+            "mirror": 0.336,
             "echo": -1.061,
-            "reply": -0.665
+            "reply": -0.365
           }
         },
         {
@@ -97,17 +109,17 @@
           "dance_t": 4.1,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "reply",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
-            "mirror": 0.856,
+            "mirror": 0.556,
             "echo": 1.464,
-            "reply": 1.515
+            "reply": 1.815
           }
         },
         {
@@ -115,17 +127,17 @@
           "dance_t": 7.0,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.052,
-            "shuffle": 1.074,
-            "box_step": 1.07
+            "stomp": 1.052,
+            "jab": 1.074,
+            "chest_pop": 1.07
           }
         },
         {
@@ -133,17 +145,17 @@
           "dance_t": 7.0,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "side",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.507,
-            "echo": 1.954,
-            "reply": 1.387
+            "echo": 2.054,
+            "reply": 1.287
           }
         },
         {
@@ -151,17 +163,17 @@
           "dance_t": 11.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "mirror",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "side",
+          "observed_partner_motion": "forward",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
             "mirror": 1.506,
-            "echo": 0.751,
-            "reply": 1.354
+            "echo": 0.851,
+            "reply": 1.254
           }
         },
         {
@@ -169,17 +181,17 @@
           "dance_t": 14.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "sweep",
+          "gesture": "port_de_bras",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "back",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "hop": 0.565,
-            "squat": 1.01,
-            "sweep": 1.014
+            "adagio": 0.565,
+            "arabesque": 1.01,
+            "port_de_bras": 1.014
           }
         },
         {
@@ -187,17 +199,17 @@
           "dance_t": 14.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "mirror",
-          "gesture": "sweep",
+          "style": "Krump",
+          "move": "echo",
+          "gesture": "port_de_bras",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "back",
-          "reason": "reflect partner's measured motion across the two lanes",
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
-            "mirror": 1.691,
+            "mirror": 1.391,
             "echo": 1.448,
-            "reply": 1.101
+            "reply": 1.401
           }
         },
         {
@@ -205,17 +217,17 @@
           "dance_t": 18.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "echo",
-          "gesture": "sweep",
+          "style": "Krump",
+          "move": "reply",
+          "gesture": "port_de_bras",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "rise",
-          "reason": "follow partner's measured motion 1.2 seconds later",
+          "observed_partner_motion": "back",
+          "reason": "answer a recorded partner motif in my own style",
           "scores": {
-            "mirror": 0.728,
-            "echo": 1.458,
-            "reply": 1.068
+            "mirror": 1.361,
+            "echo": 0.258,
+            "reply": 1.368
           }
         },
         {
@@ -223,17 +235,17 @@
           "dance_t": 21.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.088,
-            "shuffle": 0.549,
-            "box_step": 1.054
+            "stomp": 1.088,
+            "jab": 0.549,
+            "chest_pop": 1.054
           }
         },
         {
@@ -241,17 +253,17 @@
           "dance_t": 21.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "forward",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.142,
-            "echo": 1.583,
-            "reply": 1.362
+            "echo": 1.683,
+            "reply": 1.262
           }
         },
         {
@@ -259,17 +271,17 @@
           "dance_t": 25.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "reply",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
             "mirror": 1.122,
-            "echo": 0.629,
-            "reply": 1.445
+            "echo": 0.729,
+            "reply": 1.345
           }
         }
       ]
@@ -277,20 +289,32 @@
     {
       "seed": 1,
       "completed": true,
-      "min_separation_m": 1.5872400999069214,
-      "max_tilt_deg": 2.0355138771685075,
+      "min_separation_m": 1.5719760656356812,
+      "max_tilt_deg": 2.2540460614978253,
       "drone_contacts": false,
       "actual_dance_xyz_peak_to_peak_m": [
         [
-          0.830482062350359,
-          0.3016449856435103,
-          0.34992718191946603
+          0.6583048144981789,
+          0.19850733159599931,
+          0.309133697458466
         ],
         [
-          1.0149290011835252,
-          0.3297509430402752,
-          0.10046602715135
+          0.6823143116141881,
+          0.25267817396656356,
+          0.2667615430042628
         ]
+      ],
+      "mean_dance_height_m": [
+        1.4296816456790395,
+        1.0683039002214048
+      ],
+      "fraction_speed_below_0_025_mps": [
+        0.023255813953488372,
+        0.1001788908765653
+      ],
+      "krump_hold_mean_start_end_speed_mps": [
+        0.11373147584549713,
+        0.03501945565462492
       ],
       "handoffs": [
         {
@@ -321,23 +345,23 @@
           "reason": "partner moving for at least 0.8 s; leadership lease released"
         }
       ],
-      "choices": [
+      "events": [
         {
           "t": 7.35,
           "dance_t": 0.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "mirror",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "invite partner with my own style",
           "scores": {
-            "hop": 1.52,
-            "squat": 1.127,
-            "sweep": 1.115
+            "adagio": 1.52,
+            "arabesque": 1.127,
+            "port_de_bras": 1.115
           }
         },
         {
@@ -345,17 +369,17 @@
           "dance_t": 0.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "mirror",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
-            "mirror": 0.667,
+            "mirror": 0.367,
             "echo": -1.014,
-            "reply": -0.675
+            "reply": -0.375
           }
         },
         {
@@ -363,17 +387,17 @@
           "dance_t": 4.1,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "reply",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
-            "mirror": 0.808,
+            "mirror": 0.508,
             "echo": 1.443,
-            "reply": 1.466
+            "reply": 1.766
           }
         },
         {
@@ -381,17 +405,17 @@
           "dance_t": 7.0,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.066,
-            "shuffle": 1.109,
-            "box_step": 1.031
+            "stomp": 1.066,
+            "jab": 1.109,
+            "chest_pop": 1.031
           }
         },
         {
@@ -399,17 +423,17 @@
           "dance_t": 7.0,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "side",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.526,
-            "echo": 1.95,
-            "reply": 1.395
+            "echo": 2.05,
+            "reply": 1.295
           }
         },
         {
@@ -417,17 +441,17 @@
           "dance_t": 11.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "mirror",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "side",
+          "observed_partner_motion": "forward",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
             "mirror": 1.565,
-            "echo": 0.779,
-            "reply": 1.359
+            "echo": 0.879,
+            "reply": 1.259
           }
         },
         {
@@ -435,17 +459,17 @@
           "dance_t": 14.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "squat",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "back",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "hop": 0.504,
-            "squat": 1.125,
-            "sweep": 1.065
+            "adagio": 0.504,
+            "arabesque": 1.125,
+            "port_de_bras": 1.065
           }
         },
         {
@@ -453,17 +477,17 @@
           "dance_t": 14.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "mirror",
-          "gesture": "squat",
+          "style": "Krump",
+          "move": "echo",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "back",
-          "reason": "reflect partner's measured motion across the two lanes",
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
-            "mirror": 1.683,
+            "mirror": 1.383,
             "echo": 1.451,
-            "reply": 1.101
+            "reply": 1.401
           }
         },
         {
@@ -471,17 +495,17 @@
           "dance_t": 18.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "echo",
-          "gesture": "squat",
+          "style": "Krump",
+          "move": "mirror",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "forward",
-          "reason": "follow partner's measured motion 1.2 seconds later",
+          "observed_partner_motion": "back",
+          "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
-            "mirror": 0.766,
-            "echo": 1.458,
-            "reply": 1.065
+            "mirror": 1.4,
+            "echo": 0.258,
+            "reply": 1.365
           }
         },
         {
@@ -489,17 +513,17 @@
           "dance_t": 21.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "rise",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.572,
-            "shuffle": 0.616,
-            "box_step": 1.055
+            "stomp": 1.072,
+            "jab": 0.616,
+            "chest_pop": 1.055
           }
         },
         {
@@ -507,17 +531,17 @@
           "dance_t": 21.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "forward",
+          "observed_partner_motion": "back",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.176,
-            "echo": 1.5,
-            "reply": 1.395
+            "echo": 1.6,
+            "reply": 1.295
           }
         },
         {
@@ -525,17 +549,17 @@
           "dance_t": 25.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "reply",
-          "gesture": "two_step",
+          "gesture": "stomp",
           "partner": "lead",
           "leader": 1,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
             "mirror": 1.172,
-            "echo": 0.59,
-            "reply": 1.445
+            "echo": 0.69,
+            "reply": 1.345
           }
         }
       ]
@@ -543,20 +567,32 @@
     {
       "seed": 13,
       "completed": true,
-      "min_separation_m": 1.5872400999069214,
-      "max_tilt_deg": 2.0355138771685075,
+      "min_separation_m": 1.502140760421753,
+      "max_tilt_deg": 2.2540460614978253,
       "drone_contacts": false,
       "actual_dance_xyz_peak_to_peak_m": [
         [
-          0.830482062350359,
-          0.3016449856435103,
-          0.34992718191946603
+          0.6583048144981789,
+          0.18917636574377383,
+          0.309133697458466
         ],
         [
-          1.0149290011835252,
-          0.3297509430402752,
-          0.10046602715135
+          0.6565834653809008,
+          0.28194634260585905,
+          0.15040657277916325
         ]
+      ],
+      "mean_dance_height_m": [
+        1.4326584193686764,
+        1.087127431327724
+      ],
+      "fraction_speed_below_0_025_mps": [
+        0.023255813953488372,
+        0.1073345259391771
+      ],
+      "krump_hold_mean_start_end_speed_mps": [
+        0.11251976403067955,
+        0.035007815129316534
       ],
       "handoffs": [
         {
@@ -587,23 +623,23 @@
           "reason": "partner moving for at least 0.8 s; leadership lease released"
         }
       ],
-      "choices": [
+      "events": [
         {
           "t": 7.35,
           "dance_t": 0.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "mirror",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "invite partner with my own style",
           "scores": {
-            "hop": 1.539,
-            "squat": 1.103,
-            "sweep": 1.103
+            "adagio": 1.539,
+            "arabesque": 1.103,
+            "port_de_bras": 1.103
           }
         },
         {
@@ -611,17 +647,17 @@
           "dance_t": 0.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "mirror",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "still",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
-            "mirror": 0.613,
+            "mirror": 0.313,
             "echo": -1.007,
-            "reply": -0.664
+            "reply": -0.364
           }
         },
         {
@@ -629,17 +665,17 @@
           "dance_t": 4.1,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "reply",
-          "gesture": "hop",
+          "gesture": "adagio",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
-            "mirror": 0.882,
+            "mirror": 0.582,
             "echo": 1.454,
-            "reply": 1.516
+            "reply": 1.816
           }
         },
         {
@@ -647,17 +683,17 @@
           "dance_t": 7.0,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.108,
-            "shuffle": 1.129,
-            "box_step": 1.036
+            "stomp": 1.108,
+            "jab": 1.129,
+            "chest_pop": 1.036
           }
         },
         {
@@ -665,17 +701,17 @@
           "dance_t": 7.0,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "back",
+          "observed_partner_motion": "side",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.585,
-            "echo": 1.919,
-            "reply": 1.373
+            "echo": 2.019,
+            "reply": 1.273
           }
         },
         {
@@ -683,17 +719,17 @@
           "dance_t": 11.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "mirror",
-          "gesture": "shuffle",
+          "gesture": "jab",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "side",
+          "observed_partner_motion": "forward",
           "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
             "mirror": 1.515,
-            "echo": 0.723,
-            "reply": 1.423
+            "echo": 0.823,
+            "reply": 1.323
           }
         },
         {
@@ -701,17 +737,17 @@
           "dance_t": 14.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "lead",
-          "gesture": "squat",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
           "observed_partner_motion": "back",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "hop": 0.52,
-            "squat": 1.08,
-            "sweep": 1.032
+            "adagio": 0.52,
+            "arabesque": 1.08,
+            "port_de_bras": 1.032
           }
         },
         {
@@ -719,17 +755,17 @@
           "dance_t": 14.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "mirror",
-          "gesture": "squat",
+          "style": "Krump",
+          "move": "echo",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "back",
-          "reason": "reflect partner's measured motion across the two lanes",
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
-            "mirror": 1.605,
+            "mirror": 1.305,
             "echo": 1.427,
-            "reply": 1.123
+            "reply": 1.423
           }
         },
         {
@@ -737,17 +773,17 @@
           "dance_t": 18.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
-          "move": "echo",
-          "gesture": "squat",
+          "style": "Krump",
+          "move": "mirror",
+          "gesture": "arabesque",
           "partner": "lead",
           "leader": 0,
-          "observed_partner_motion": "forward",
-          "reason": "follow partner's measured motion 1.2 seconds later",
+          "observed_partner_motion": "back",
+          "reason": "reflect partner's measured motion across the two lanes",
           "scores": {
-            "mirror": 0.751,
-            "echo": 1.438,
-            "reply": 1.062
+            "mirror": 1.384,
+            "echo": 0.238,
+            "reply": 1.362
           }
         },
         {
@@ -755,17 +791,17 @@
           "dance_t": 21.05,
           "drone": 1,
           "name": "Sol",
-          "style": "Country",
+          "style": "Krump",
           "move": "lead",
-          "gesture": "two_step",
+          "gesture": "chest_pop",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "rise",
+          "observed_partner_motion": "forward",
           "reason": "take the lead after sustained measured engagement",
           "scores": {
-            "two_step": 1.559,
-            "shuffle": 0.646,
-            "box_step": 1.068
+            "stomp": 1.059,
+            "jab": 0.646,
+            "chest_pop": 1.068
           }
         },
         {
@@ -773,17 +809,17 @@
           "dance_t": 21.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "echo",
-          "gesture": "two_step",
+          "gesture": "chest_pop",
           "partner": "lead",
           "leader": 1,
-          "observed_partner_motion": "forward",
+          "observed_partner_motion": "back",
           "reason": "follow partner's measured motion 1.2 seconds later",
           "scores": {
             "mirror": 1.129,
-            "echo": 1.543,
-            "reply": 1.434
+            "echo": 1.643,
+            "reply": 1.334
           }
         },
         {
@@ -791,17 +827,17 @@
           "dance_t": 25.05,
           "drone": 0,
           "name": "Ari",
-          "style": "Hopak",
+          "style": "Classical Ballet",
           "move": "reply",
-          "gesture": "two_step",
+          "gesture": "chest_pop",
           "partner": "lead",
           "leader": 1,
           "observed_partner_motion": "forward",
           "reason": "answer a recorded partner motif in my own style",
           "scores": {
             "mirror": 1.161,
-            "echo": 0.568,
-            "reply": 1.378
+            "echo": 0.668,
+            "reply": 1.278
           }
         }
       ]

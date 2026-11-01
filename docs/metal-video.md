@@ -1,16 +1,20 @@
 # Original organizer scene, local Metal MP4
 
-[Watch/download the duet](../media/drone-duet-hopak-country.mp4).
+[Watch/download the duet](../media/drone-duet-ballet-krump.mp4).
 
 The user approved using the organizers’ scene/code with a local renderer after NVIDIA Isaac Sim proved incompatible with this Apple M4 Mac. This video is rendered by macOS’s built-in `/usr/bin/usdrecord --renderer Metal`, using Apple’s Hydra/Storm USD renderer. It is not claimed to be NVIDIA RTX output.
 
 ## Result
 
-H.264 MP4, 1280×720, 24 fps, 1,060 frames, 44.17 seconds. The two drones start resting on their pads with motors off. After a 1.5-second ground hold, they take off half a second apart, reach hover, perform 28 seconds of larger Hopak/country choreography, return to their pads, and land. Minimum 3D separation is 1.600 m; no drone-to-drone contacts were detected. Maximum tilt is 2.02°. The three leadership handoffs occur at 14.30, 21.35 and 28.35 seconds.
+H.264 MP4, 1280×720, 24 fps, 1,064 frames, 44.33 seconds, with stereo AAC music. The two drones start resting on their pads with motors off. After a 1.5-second ground hold, they take off half a second apart, reach hover, perform 28 seconds of Classical Ballet/Krump choreography, return to their pads, and land. Minimum 3D separation is 1.550 m; no drone-to-drone contacts were detected. Maximum tilt is 2.28°. The three leadership handoffs occur at 14.30, 21.35 and 28.35 seconds.
+
+The oblique camera uses the original recorder’s camera construction, positioned inside the room to reveal forward/back travel.
 
 The delivered video contains the clean 3D frames, without the black diagnostic header or bottom telemetry panel. Measurements, policy choices and provenance are separate JSON data. The earlier four-move video remains recoverable from Git history at commit `2f4eed2`.
 
 The original firmware/rotor model drives the ascent; poses are integrated by MuJoCo, not animated to target heights. The local takeoff procedure approximates the SDK's onboard altitude control using ideal simulated altitude; it is not a reproduction of proprietary Tello takeoff firmware. Both takeoffs complete at 6.35 seconds. The MP4 is decoded in full and frames from the ground start, takeoff, dance and landing are visually checked.
+
+Music is [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The excerpt starts at 32 seconds, spans the video, has loudness adjustment, 1.5-second fade in and 2-second fade out. It is background music, not beat-synchronized flight control. Attribution is embedded in MP4 metadata and the provenance JSON; see [music credits](../media/music/README.md).
 
 ## What actually comes from the organizers
 
@@ -33,7 +37,7 @@ The lane-bounded mission uses seeded procedural choices and measured partner res
 
 ## Dance selection and coordination
 
-**The shipped MP4 uses the current [partner-responsive policy](choreography.md)** with larger Hopak/country dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. The seed-7 recording shows 0.760 m / 0.869 m of actual forward/back travel and 0.281 m of Hopak height travel. There is no model inference or learning in the recording.
+**The shipped MP4 uses the current [partner-responsive policy](choreography.md)** with Classical Ballet/Krump dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. The seed-7 recording shows 0.847 m / 0.878 m of actual forward/back travel, elevated sustained Ballet and low burst/stop Krump. There is no model inference or learning in the recording.
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 
@@ -48,12 +52,14 @@ python3.11 -m venv .venv-metal
 source .venv-metal/bin/activate
 python -m pip install -r requirements-metal.txt
 python -m duet.bootstrap
-python -u -m duet.metal_record --output-dir "$PWD/outputs/metal-duet"
+python -u -m duet.metal_record --music --output-dir "$PWD/outputs/metal-duet"
 ```
 
 No Isaac/Omniverse package is required for this rendering path.
 
 The command generates `duet.usda`, `simulation.json` (actual frames, RC, tag fixes, mission decisions and contact checks), `provenance.json`, `usd-stage-port.patch`, PNG frames, `render.log`, and `drone-duet.mp4` in the output directory. For Apple USD Tools 0.24.3, numeric frame placeholders produce unpadded filenames; encoding uses `frame_%d.png`.
+
+Use `--music` to include the bundled licensed track; `--music-start SECONDS` selects its excerpt. Encoding records attribution, source hash, exact filters and the full-decode result in `drone-duet.encoding.json`. Omit `--music` for a silent MP4.
 
 For the organizers' diagnostic panels, add `--telemetry`. This writes `drone-duet-telemetry.mp4` using separate `telemetry-frames/` copies, preserving the clean rendered PNGs and MP4. Telemetry encoding is repeatable without accumulating overlays on the source frames.
 
@@ -66,4 +72,4 @@ python -u -m duet.metal_record --encode-only
 python -m unittest discover -s tests -v
 ```
 
-The scene/model tests verify original URDF mass, full inertia (accounting for MuJoCo’s principal-frame reordering), collision geometry, two free bodies in one world, source patch scope and expected USD scene contents. The shipped [provenance report](../media/drone-duet-hopak-country.provenance.json) records original source hashes and output metrics. Organizer and URDF licenses remain applicable; see their `THIRD_PARTY.md`.
+The scene/model tests verify original URDF mass, full inertia (accounting for MuJoCo’s principal-frame reordering), collision geometry, two free bodies in one world, source patch scope and expected USD scene contents. The shipped [provenance report](../media/drone-duet-ballet-krump.provenance.json) records original source hashes and output metrics. Organizer and URDF licenses remain applicable; see their `THIRD_PARTY.md`.

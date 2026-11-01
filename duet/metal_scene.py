@@ -203,7 +203,7 @@ def create_scene(output, width=1280, height=720, fps=24):
     viewport = types.SimpleNamespace()
     camera_namespace = {"np": np, "H_AP": 20.955, "get_active_viewport": lambda: viewport,
         "args": types.SimpleNamespace(view="overview", width=width, height=height),
-        "VIEWS": {"overview": ((5.5, 0.0, 2.1), (2.5, 0.0, 0.9), 18.0)}}
+        "VIEWS": {"overview": ((5.3, 1.35, 2.35), (2.5, 0.0, 0.9), 18.0)}}
     camera = original_function(UPSTREAM / "simulation_infra/scripts/record_room.py", "setup_camera", camera_namespace)
     camera(types.SimpleNamespace(scene=types.SimpleNamespace(env_origins=torch.zeros((1, 3)))), stage)
     stage.GetRootLayer().Save()

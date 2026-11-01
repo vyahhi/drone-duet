@@ -13,7 +13,7 @@ import random
 
 MOVES = ("lead", "mirror", "echo", "reply")
 LIMITS = (0.70, 0.45, 0.42)
-TARGET_SPEED = 0.30  # m/s, a target slew limit; actual RC/physics motion is logged
+TARGET_SPEED = 0.80  # maximum target slew; each style uses its own lower/equal limit
 RC_XY_CAP = 35
 
 
@@ -39,11 +39,12 @@ class Style:
     gestures: tuple[str, ...]
     period: float
     response_bias: tuple[float, float, float]  # mirror, echo, reply
+    target_speed: float
 
 
 STYLES = (
-    Style("Ari", "Hopak", ("hop", "squat", "sweep"), 10.0, (0.1, 0.6, 0.4)),
-    Style("Sol", "Country", ("two_step", "shuffle", "box_step"), 10.0, (0.6, 0.1, 0.5)),
+    Style("Ari", "Classical Ballet", ("adagio", "arabesque", "port_de_bras"), 12.0, (0.1, 0.7, 0.3), 0.32),
+    Style("Sol", "Krump", ("stomp", "jab", "chest_pop"), 12.0, (0.3, 0.1, 0.8), 0.80),
 )
 
 
@@ -61,6 +62,8 @@ class Dancer:
     scores: dict = field(default_factory=dict)
     reply: list = field(default_factory=list)
     observed: str = "still"
+    response_offset: tuple = (0.0, 0.0, 0.0)
+    hold: bool = False
 
 
 class Choreography:
@@ -106,8 +109,8 @@ class Choreography:
         d = self.dancers[i]
         d.observed, _ = self.motion(1 - i, t)
         # Novelty competes with a style-specific response to the partner's motion.
-        preferred = ({"rise": "squat", "dip": "hop", "side": "sweep", "still": "hop"} if i == 0 else
-                     {"rise": "two_step", "dip": "shuffle", "side": "box_step", "still": "two_step"}).get(d.observed)
+        preferred = ({"rise": "arabesque", "dip": "adagio", "side": "port_de_bras", "still": "adagio"} if i == 0 else
+                     {"rise": "stomp", "dip": "chest_pop", "side": "jab", "still": "jab"}).get(d.observed)
         d.scores = {g: 1.0 / (1 + d.visits.get(g, 0)) + (0.5 if g == preferred else 0)
                    + d.rng.uniform(0, 0.15) - (0.5 if g == d.gesture else 0)
                    for g in d.profile.gestures}
@@ -154,27 +157,37 @@ class Choreography:
                 break
             a, offset = b, b[1]
         x, y, z = offset
-        if d.profile.style == "Hopak":
-            # Answer lateral footwork with a broad sweep and vertical hop accent.
-            return bounded((1.1 * x, -y, 0.8 * abs(x) - 0.20 + 0.4 * z))
-        # Translate a hop into held country steps and a shallow bow. Discrete
-        # targets still pass through the mission's continuous slew limiter.
-        return bounded((round(-x / 0.16) * 0.16, -y, -0.14 - 0.15 * z))
+        # Rotate the recorded motif into an answering phrase, then apply the same
+        # style interpretation used for mirror/echo. No style-neutral following.
+        return bounded((0.9 * z + 0.6 * x, -y, -0.65 * x))
+
+    def _interpret_response(self, d, offset, dt):
+        x, y, z = offset
+        if d.profile.style == "Classical Ballet":
+            desired = bounded((1.40 * x, 0.85 * y, 0.24 + 0.50 * z))
+            alpha = 1 - math.exp(-dt / 0.65)
+            d.response_offset = tuple(old + alpha * (new - old)
+                                      for old, new in zip(d.response_offset, desired))
+        else:
+            # Strong horizontal accents and a low center; holding is enforced by
+            # the actual RC adapter as well as the target generator.
+            d.response_offset = bounded((round(1.60 * x / 0.18) * 0.18,
+                                         round(y / 0.12) * 0.12, -0.24 + 0.30 * z))
+        return d.response_offset
 
     def _lead_offset(self, d):
-        a = 2 * math.pi * d.phrase / d.profile.period
+        a = 2 * math.pi * d.phrase / d.profile.period - math.pi / 2
         # Human dance vocabulary translated into whole-drone travel, without
         # flips or yaw spins that would turn the cameras away from the room tags.
-        outward = -1 if d.profile.style == "Hopak" else 1
-        corner = int(d.phrase / 2.5) % 4
+        accent = int(d.phrase / 3.0) % 4
         offsets = {
-            "hop": (0.65 * math.sin(a), outward * 0.32 * math.sin(a / 2) ** 2, 0.42 * math.cos(a)),
-            "squat": (0.65 if math.sin(a) >= 0 else -0.65, outward * 0.25, -0.40 if math.cos(a) >= 0 else 0.38),
-            "sweep": (0.70 * math.cos(a), outward * (0.20 + 0.20 * math.sin(a)), 0.32 * math.sin(a)),
-            "two_step": (0.68 if math.sin(a) >= 0 else -0.68, outward * 0.22, -0.12),
-            "shuffle": (0.65 * math.cos(a), outward * (0.22 + 0.20 * math.sin(a)), -0.25 * math.sin(a) ** 2),
-            "box_step": ((0.68, 0.68, -0.68, -0.68)[corner],
-                         outward * (0.0, 0.42, 0.42, 0.0)[corner], -0.16 if corner == 3 else 0.06),
+            "adagio": (0.68 * math.sin(a), -0.38 * math.sin(a / 2) ** 2, 0.22 + 0.17 * math.sin(a)),
+            "arabesque": (0.64 * math.sin(a), -0.30 * math.sin(a / 2) ** 2, 0.32 + 0.06 * math.cos(a)),
+            "port_de_bras": (0.65 * math.sin(a), -0.42 * math.sin(a) ** 2, 0.18 + 0.18 * math.sin(2 * a)),
+            "stomp": ((0.64, -0.64, 0.50, -0.50)[accent], (0.12, 0.42, 0.12, 0.42)[accent], -0.38),
+            "jab": ((0.70, -0.70, 0.70, -0.70)[accent], (0.40, 0.02, 0.40, 0.02)[accent], -0.20),
+            "chest_pop": ((0.62, -0.62, -0.62, 0.62)[accent], 0.32,
+                          (-0.08, -0.38, -0.08, -0.38)[accent]),
         }
         return bounded(offsets[d.gesture])
 
@@ -208,6 +221,9 @@ class Choreography:
         for i, d in enumerate(self.dancers):
             partner = self.sample(t, 1 - i)
             d.observed, _ = self.motion(1 - i, t)
+            # A two-second burst/stop articulation persists in every Krump mode,
+            # including mirrors. Ballet keeps a continuous sustained line.
+            d.hold = d.profile.style == "Krump" and t % 2.0 >= 1.35
             if d.mode == "lead":
                 # Slow an invitation when the partner lags instead of blindly keeping time.
                 mismatch = math.dist(reflect(offsets[i]), partner)
@@ -215,15 +231,16 @@ class Choreography:
                 d.phrase += dt * d.phrase_rate
                 offset = self._lead_offset(d)
             elif d.mode == "mirror":
-                offset = reflect(partner)
+                offset = self._interpret_response(d, reflect(partner), dt)
             elif d.mode == "echo":
-                offset = reflect(self.sample(t - 1.2, 1 - i))
+                offset = self._interpret_response(d, reflect(self.sample(t - 1.2, 1 - i)), dt)
             else:
-                offset = self._reply_offset(d, t)
+                offset = self._interpret_response(d, self._reply_offset(d, t), dt)
             result.append(tuple(h + v for h, v in zip(self.homes[i], lane_offset(offset, i))))
         return tuple(result)
 
     def snapshot(self):
         return [{"name": d.profile.name, "style": d.profile.style, "mode": d.mode,
                  "gesture": d.gesture, "reason": d.reason, "observed_partner_motion": d.observed,
-                 "phrase_rate": d.phrase_rate} for d in self.dancers]
+                 "phrase_rate": d.phrase_rate, "target_speed_mps": d.profile.target_speed,
+                 "hold": d.hold} for d in self.dancers]

@@ -54,6 +54,9 @@ def rc_for_pair(module, states, decision, tag_height=1.22):
     positions = [np.asarray(to_internal(s.position, tag_height)) for s in states]
     result = []
     for i, s in enumerate(states):
+        if decision.holds[i]:
+            result.append((0, 0, 0, 0))
+            continue
         psi = (180 - math.degrees(s.yaw) + 180) % 360 - 180
         rc, _, _ = module.control(positions[i], psi,
                                   np.asarray(to_internal(decision.targets[i], tag_height)),

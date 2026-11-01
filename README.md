@@ -8,12 +8,14 @@ The Python controller runs on a **shared Linux flight computer** and sends takeo
 
 | Dancer | Human dance inspiration | Movement vocabulary |
 | --- | --- | --- |
-| Ari, orange pad | Hopak | Rising hop accents, squat-like dips, broad sweeps |
-| Sol, cyan pad | Country line dance | Two-step travel, side shuffles, box steps, bows |
+| Ari, orange pad | Classical Ballet | Sustained adagio arcs, elevated arabesques, sweeping port de bras |
+| Sol, cyan pad | Krump | Low stomps, forceful traveling jabs, chest-pop accents and deliberate stops |
+
+Style persists through every response: Ballet smooths the partner’s movement into elevated curves; Krump quantizes it into low accents with RC braking holds.
 
 Each dancer can **lead, mirror observed motion, echo it after a delay, or answer a recorded phrase in its own style**. They trade the lead after sustained measured engagement, and the leader slows when the partner lags. Choices depend on motion observations and move history. This is feedback-driven, rule-based autonomy; no LFM inference is implemented.
 
-Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Command smoothing and firmware response reduce actual motion. In the nominal seed-7 physics run, the drones traveled **0.76 m and 0.87 m forward/back**, with **0.28 m of Hopak height travel**. See [policy details](docs/choreography.md) and [recorded validation](reports/choreography-check.json).
+Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Command smoothing and firmware response reduce actual motion. In the nominal seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stays **35 cm higher on average**, while Krump brakes into repeated holds. See [policy details](docs/choreography.md) and [recorded validation](reports/choreography-check.json).
 
 ## Run with real drones
 
@@ -44,11 +46,11 @@ The mission performs staggered takeoff, acquires localization, settles, dances f
 
 ## Simulation and MP4
 
-[Watch/download the 44.2-second Hopak/country MP4](media/drone-duet-hopak-country.mp4): ground start → staggered takeoff → larger partner-responsive dance → return → landing.
+[Watch/download the 44.3-second Ballet/Krump MP4](media/drone-duet-ballet-krump.mp4): ground start → staggered takeoff → larger partner-responsive dance → return → landing.
 
-The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-hopak-country.provenance.json) accompany the clip.
+The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-ballet-krump.provenance.json) accompany the clip.
 
-The MP4 shows the current Hopak/country policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
+The MP4 shows the current Ballet/Krump policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
 
 On Apple Silicon macOS, install the local simulation dependencies:
 
@@ -62,10 +64,12 @@ python -m duet.bootstrap
 python -u -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 
 # Simulate, render and encode a clean MP4 using macOS USD Metal and ffmpeg.
-python -u -m duet.metal_record --output-dir outputs/duet-video
+python -u -m duet.metal_record --music --output-dir outputs/duet-video
 ```
 
 [MP4 reproduction and provenance](docs/metal-video.md) describe the organizers-based recording pipeline. A separate [original Isaac recorder](docs/organizer-stack.md#original-3d-visualization--mp4) is available for an already configured Linux NVIDIA Isaac host; that backend remains unvalidated here.
+
+Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The excerpt has loudness adjustment and fades; it does not drive the flight policy. [Music credit and edit details](media/music/README.md).
 
 ## Verification
 
@@ -93,4 +97,4 @@ The flight environment runs policy, hardware-adapter and recorder-preparation ch
 
 Organizer source is fetched into ignored `vendor/action-space`, pinned to commit `cd6536a458c3ba034a727ea00f57adac6bed9471`, and checked for modifications before use. The original [drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks) kit links to this fuller multi-drone stack.
 
-Our code is MIT. Organizer code, external runtimes and Tello assets retain their own terms; see [third-party credits](media/THIRD_PARTY.md).
+Our code is MIT. Organizer code, external runtimes and Tello assets and music retain their own terms; see [third-party credits](media/THIRD_PARTY.md).

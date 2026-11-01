@@ -1,7 +1,10 @@
 """Checks for the user-approved local USD/MuJoCo port (optional dependencies)."""
 import importlib.util
 import math
+import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -11,6 +14,34 @@ READY = all(importlib.util.find_spec(name) is not None for name in ("mujoco", "p
 
 @unittest.skipUnless(READY, "requires requirements-metal.txt")
 class MetalPortTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "requires ffmpeg/ffprobe")
+    def test_music_encode_contains_audio_credit_and_preserves_clean_frames(self):
+        import cv2
+        import numpy as np
+        from duet.metal_record import encode
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "frames").mkdir()
+            for i in range(48):
+                cv2.imwrite(str(out / f"frames/frame_{i}.png"), np.full((64, 64, 3), 170, dtype=np.uint8))
+            original = (out / "frames/frame_0.png").read_bytes()
+            report = {"fps": 24, "frame_count": 48}
+            video = out / "duet.mp4"
+            encode(out, report, video, music=True)
+            probe = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams",
+                                                       "-show_format", "-of", "json", str(video)], text=True))
+            audio = next(s for s in probe["streams"] if s["codec_type"] == "audio")
+            self.assertEqual(audio["codec_name"], "aac")
+            self.assertEqual(audio["sample_rate"], "48000")
+            self.assertAlmostEqual(float(audio["duration"]), 2.0, delta=0.03)
+            self.assertIn("Five Armies", probe["format"]["tags"]["copyright"])
+            self.assertEqual((out / "frames/frame_0.png").read_bytes(), original)
+            provenance = json.loads((out / "duet.encoding.json").read_text())
+            self.assertFalse(provenance["music"]["beat_synchronized"])
+            self.assertEqual(provenance["full_decode_check"], "passed")
+            with self.assertRaises(ValueError):
+                encode(out, report, out / "invalid.mp4", music=True, music_start=155)
+
     def test_optional_telemetry_preserves_clean_frames_and_is_repeatable(self):
         import cv2
         import numpy as np
@@ -88,9 +119,22 @@ class MetalPortTests(unittest.TestCase):
         dance = [row for row in rows if row["phase"] == "dance"]
         for i in range(2):
             travel_x = max(r["positions"][i][0] for r in dance) - min(r["positions"][i][0] for r in dance)
-            self.assertGreater(travel_x, 0.65)  # actual rigid-body travel, not target amplitude
-        hopak_height = max(r["positions"][0][2] for r in dance) - min(r["positions"][0][2] for r in dance)
-        self.assertGreater(hopak_height, 0.22)
+            self.assertGreater(travel_x, 0.80)  # actual rigid-body travel, not target amplitude
+        ballet_height = max(r["positions"][0][2] for r in dance) - min(r["positions"][0][2] for r in dance)
+        self.assertGreater(ballet_height, 0.25)
+        import numpy as np
+        positions = np.array([r["positions"] for r in dance])
+        speed = np.linalg.norm(np.array([r["velocities"] for r in dance]), axis=2)
+        # Measure the executed style, rather than checking style labels alone.
+        self.assertGreater(positions[:, 0, 2].mean() - positions[:, 1, 2].mean(), 0.30)
+        stops = (speed < 0.025).mean(axis=0)
+        self.assertLess(stops[0], 0.05)  # sustained Ballet
+        self.assertGreater(stops[1], 0.10)  # Krump stop accents
+        holds = np.array([r["dancers"][1]["hold"] for r in dance])
+        starts = np.flatnonzero(holds & ~np.roll(holds, 1))
+        ends = np.flatnonzero(holds & ~np.roll(holds, -1))
+        # Firmware needs time to brake; compare the start/end of each hold.
+        self.assertLess(speed[ends, 1].mean(), speed[starts, 1].mean() * 0.50)
 
     def test_original_usd_scene_is_usable_and_only_portable_stage_hook_is_patched(self):
         from duet.metal_scene import create_scene, visible_tags

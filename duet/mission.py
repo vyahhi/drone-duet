@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .choreography import Choreography, MOVES, TARGET_SPEED
+from .choreography import Choreography, MOVES
 
 Vec = tuple[float, float, float]
 HOMES: tuple[Vec, Vec] = ((2.5, -0.8, 1.22), (2.5, 0.8, 1.22))
@@ -30,6 +30,7 @@ class Decision:
     targets: tuple[Vec, Vec] | None
     land: bool = False
     reason: str = ""
+    holds: tuple[bool, bool] = (False, False)
 
 
 class Mission:
@@ -133,8 +134,12 @@ class Mission:
         raw = self.choreography.step(states, self.dance_t, t) if self.phase == "dance" else HOMES
         self.moves = [d.mode for d in self.choreography.dancers]
         # Smooth phrase changes, including the return to home.
+        holds = tuple(d.hold for d in self.choreography.dancers) if self.phase == "dance" else (False, False)
         for i, target in enumerate(raw):
+            if holds[i]:
+                continue
+            speed = self.choreography.dancers[i].profile.target_speed if self.phase == "dance" else 0.30
             delta = tuple(target[k] - self.targets[i][k] for k in range(3))
-            scale = min(1.0, TARGET_SPEED * dt / max(1e-12, math.dist(target, self.targets[i])))
+            scale = min(1.0, speed * dt / max(1e-12, math.dist(target, self.targets[i])))
             self.targets[i] = tuple(self.targets[i][k] + scale * delta[k] for k in range(3))
-        return Decision(self.phase, tuple(self.targets))
+        return Decision(self.phase, tuple(self.targets), holds=holds)

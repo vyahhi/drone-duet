@@ -186,6 +186,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                 controller.set_command(command)
                 rows.append({"t": t, "phase": phase, "moves": list(mission.moves),
                              "dancers": mission.choreography.snapshot(),
+                             "velocities": vworld,
                              "reason": mission.reason, "rc": commands, "positions": positions,
                              "published_positions": last_fix.copy(),
                              "fix_ages": [None if not math.isfinite(s.fix_age) else s.fix_age for s in states],
@@ -239,7 +240,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                   "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
                   "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
                   "takeoff_complete_s": mission_at, "physical_flight_tested": False,
-                  "choreography": "measured-motion utility policies, Hopak and Country dance styles; no LFM inference",
+                  "choreography": "Classical Ballet vs Krump: style-preserving measured replies, independent pacing and RC holds; no LFM",
                   "fps": fps, "frame_count": len(frames), "duration_s": len(frames) / fps,
                   "dance_seconds": dance_seconds, "seed": seed, "min_separation_m": min_gap,
                   "max_tilt_deg": max_tilt, "drone_contacts": contacts, "completed": True,
@@ -297,13 +298,38 @@ def telemetry_frames(output, report):
     return frames
 
 
-def encode(output, report, video, *, telemetry=False):
+def encode(output, report, video, *, telemetry=False, music=False, music_start=32.0):
     frames = telemetry_frames(output, report) if telemetry else output / "frames"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(report["fps"]),
-                    "-i", str(frames / "frame_%d.png"), "-frames:v", str(report["frame_count"]),
-                    "-c:v", "libx264", "-crf", "18",
-                    "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(video)], check=True)
+    cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(report["fps"]),
+           "-i", str(frames / "frame_%d.png")]
+    encoding = {"telemetry_overlay": telemetry, "music": None}
+    if music:
+        source = ROOT / "media/music/five-armies-kevin-macleod.mp3"
+        credit = json.loads((source.parent / "attribution.json").read_text())
+        duration = report["frame_count"] / report["fps"]
+        probe = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_format",
+                                                   "-of", "json", str(source)], text=True))
+        if not math.isfinite(music_start) or music_start < 0 or music_start + duration > float(probe["format"]["duration"]):
+            raise ValueError("Music excerpt must fit within the source track")
+        filters = (f"atrim=duration={duration},asetpts=PTS-STARTPTS,"
+                   "loudnorm=I=-20:TP=-2:LRA=11,afade=t=in:d=1.5,"
+                   f"afade=t=out:st={max(0, duration - 2)}:d=2")
+        cmd += ["-ss", str(music_start), "-i", str(source), "-map", "0:v:0", "-map", "1:a:0",
+                "-af", filters, "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+                "-metadata", "title=Drone Duet: Classical Ballet vs Krump",
+                "-metadata", f"artist={credit['artist']}",
+                "-metadata", f"copyright={credit['attribution']}",
+                "-metadata", "comment=Music excerpt, loudness adjustment and fades; simulated drone flight."]
+        encoding["music"] = {**credit, "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                              "start_s": music_start, "duration_s": duration, "audio_filter": filters,
+                              "codec": "AAC 192 kb/s, 48 kHz stereo", "beat_synchronized": False}
+    cmd += ["-t", str(report["frame_count"] / report["fps"]),
+            "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(video)]
+    subprocess.run(cmd, check=True)
     subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-f", "null", "-"], check=True)
+    encoding["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+    encoding["full_decode_check"] = "passed"
+    (output / (video.stem + ".encoding.json")).write_text(json.dumps(encoding, indent=2) + "\n")
     print("[metal] MP4:", video, flush=True)
 
 
@@ -317,6 +343,8 @@ def main():
     parser.add_argument("--render-only", action="store_true")
     parser.add_argument("--encode-only", action="store_true")
     parser.add_argument("--telemetry", action="store_true", help="Add original recorder diagnostic panels; default is clean 3D")
+    parser.add_argument("--music", action="store_true", help="Add credited CC BY 4.0 Five Armies soundtrack")
+    parser.add_argument("--music-start", type=float, default=32.0, help="Excerpt start in source music, seconds")
     args = parser.parse_args()
     if not 1 <= args.fps <= 60:
         parser.error("--fps must be between 1 and 60")
@@ -337,7 +365,7 @@ def main():
         with (output / "render.log").open("w") as log:
             subprocess.run(cmd, check=True, stdout=log, stderr=subprocess.STDOUT)
     video = output / ("drone-duet-telemetry.mp4" if args.telemetry else "drone-duet.mp4")
-    encode(output, report, video, telemetry=args.telemetry)
+    encode(output, report, video, telemetry=args.telemetry, music=args.music, music_start=args.music_start)
 
 
 if __name__ == "__main__":

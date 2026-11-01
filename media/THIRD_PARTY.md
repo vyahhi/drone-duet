@@ -1,5 +1,9 @@
 # Third-party assets
 
+## Background music
+
+“Five Armies” by Kevin MacLeod (incompetech.com), ISRC USUAN1100875. Licensed under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/). [Original track](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875). The MP4 uses an excerpt with loudness adjustment and fades. Full attribution and edit details: [music/README.md](music/README.md). This music is excluded from the repository’s MIT code license.
+
 ## Tello URDF
 
 `assets/tello/tello.urdf` is derived from `tello_description/urdf/tello.xml` in

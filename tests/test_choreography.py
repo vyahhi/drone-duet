@@ -3,7 +3,7 @@ import dataclasses
 import math
 import unittest
 
-from duet.choreography import Choreography, reflect
+from duet.choreography import Choreography
 from duet.mission import HOMES, Mission, State
 
 
@@ -18,7 +18,7 @@ class InteractionTests(unittest.TestCase):
         c.step(observations(), 0, 0)
         offset = (0.18, 0.08, -0.10)
         target = c.step(observations((offset, (0, 0, 0))), 0.05, 0.05)[1]
-        expected = tuple(h + p for h, p in zip(HOMES[1], reflect(offset)))
+        expected = (HOMES[1][0] + 0.36, HOMES[1][1] - 0.10, HOMES[1][2] - 0.27)
         self.assertEqual(target, expected)
         self.assertNotEqual(target, HOMES[1])
         # Identical clocks/seeds, different observations -> different decisions/targets.
@@ -30,11 +30,11 @@ class InteractionTests(unittest.TestCase):
         c = Choreography(HOMES, 7, [])
         for tick in range(41):
             t = tick * 0.05
-            c.step(observations(((t * 0.08, 0, t * 0.04), (0, 0, 0))), t, t)
+            c.step(observations(((t * 0.20, 0, t * 0.04), (0, 0, 0))), t, t)
         c.dancers[1].mode = "echo"
         target = c.step(observations(((0.23, 0, 0.17), (0, 0, 0))), 2.05, 2.05)[1]
-        self.assertAlmostEqual(target[0] - HOMES[1][0], 0.85 * 0.08)
-        self.assertAlmostEqual(target[2] - HOMES[1][2], 0.85 * 0.04)
+        self.assertAlmostEqual(target[0] - HOMES[1][0], 0.36)
+        self.assertAlmostEqual(target[2] - HOMES[1][2], -0.24 + 0.30 * (0.85 * 0.04))
 
     def test_reply_captures_motif_and_reinterprets_in_own_style(self):
         c = Choreography(HOMES, 7, [])
@@ -46,8 +46,9 @@ class InteractionTests(unittest.TestCase):
         self.assertTrue(d.reply)
         captured = list(d.reply)
         target = c._reply_offset(d, 5)
-        self.assertAlmostEqual(target[0] / 0.16, round(target[0] / 0.16))
-        self.assertLess(target[2], 0)  # a country bow answers the partner's hop
+        interpreted = c._interpret_response(d, target, 0.05)
+        self.assertAlmostEqual(interpreted[0] / 0.18, round(interpreted[0] / 0.18))
+        self.assertLess(interpreted[2], -0.20)  # low Krump answer to an elevated motif
         c.history.append((4, ((-0.24, -0.12, -0.18), (0, 0, 0))))
         self.assertEqual(c._reply_offset(d, 5), target)
         self.assertEqual(d.reply, captured)
@@ -66,9 +67,35 @@ class InteractionTests(unittest.TestCase):
         self.assertEqual(c.leader, 1)
         self.assertTrue(any("handoff" in e for e in events))
         ari, sol = c.dancers
-        self.assertEqual((ari.profile.style, sol.profile.style), ("Hopak", "Country"))
-        self.assertIn(sol.gesture, ("two_step", "shuffle", "box_step"))
+        self.assertEqual((ari.profile.style, sol.profile.style), ("Classical Ballet", "Krump"))
+        self.assertIn(sol.gesture, ("stomp", "jab", "chest_pop"))
         self.assertTrue(all("reason" in e for e in events if "move" in e))
+
+    def test_style_persists_in_every_response_mode_and_holds_brake_rc(self):
+        from duet.upstream import rc_for_pair
+        from duet.mission import Decision
+        from unittest.mock import Mock
+        c = Choreography(HOMES, 7, [])
+        for mode in ("mirror", "echo", "reply"):
+            for d in c.dancers:
+                d.mode = mode
+                for _ in range(60):
+                    c._interpret_response(d, (0.30, -0.10, 0.10), 0.05)
+            ballet, krump = (d.response_offset for d in c.dancers)
+            self.assertGreater(ballet[2], 0.28)
+            self.assertLess(krump[2], -0.20)
+            self.assertAlmostEqual(krump[0] / 0.18, round(krump[0] / 0.18))
+        c.step(observations(), 0, 0)
+        c.step(observations(), 1.5, 1.5)
+        self.assertFalse(c.dancers[0].hold)
+        self.assertTrue(c.dancers[1].hold)
+        module = Mock()
+        module.control.return_value = ((3, 4, 5, 6), 0, 0)
+        decision = Decision("dance", HOMES, holds=(False, True))
+        self.assertEqual(rc_for_pair(module, observations(), decision), [(3, 4, 5, 6), (0, 0, 0, 0)])
+        self.assertEqual(module.control.call_count, 1)
+        c.step(observations(), 2.05, 2.05)
+        self.assertFalse(c.dancers[1].hold)
 
     def test_leader_slows_when_partner_lags(self):
         c = Choreography(HOMES, 7, [])

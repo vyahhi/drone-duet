@@ -1,57 +1,56 @@
 # Partner-responsive drone duet
 
-The same `duet/mission.py` / `duet/choreography.py` policy runs in the hardware adapter, the original Isaac recorder hooks, and the local Metal/MuJoCo simulator.
+The same `duet/mission.py` / `duet/choreography.py` policy runs in the hardware adapter, original Isaac recorder hooks and local Metal/MuJoCo simulator.
 
-## Two styles
+## Classical Ballet vs Krump
 
-| Dancer | Style | Leading phrases | Response preferences |
-| --- | --- | --- | --- |
-| Ari, orange pad | Hopak-inspired | Rising hop accents, low squat-like dips, broad sweeping travel | Echoes and replies that turn footwork into hop accents |
-| Sol, cyan pad | Country line dance-inspired | Two-step travel, side shuffles, rectangular box steps and bows | Mirroring and held steps that answer the partner's hops |
+| Dancer | Leading vocabulary | Style retained while responding |
+| --- | --- | --- |
+| Ari, orange pad: Classical Ballet | Sustained adagio arcs, elevated arabesques and broad port-de-bras sweeps | Elevated, amplified travel with a 0.65 s smoothing time constant; continuous phrasing |
+| Sol, cyan pad: Krump | Low stomps, strong traveling jabs and chest-pop height accents | Amplified horizontal responses quantized into 18 cm / 12 cm accents; low center; 0.65 s braking holds every 2 s |
 
-These are playful translations of human dance vocabulary into whole-drone travel. They do not reproduce human footwork or body articulation. All target changes pass through a 0.30 m/s smoothing limit before the organizers' RC controller; hop accents are powered rises and dips, not ballistic jumps or flips. Cameras remain pointed toward the room tags.
+Human dance vocabulary becomes whole-drone travel, rather than literal human articulation. Ballet target slew is 0.32 m/s; Krump target slew is 0.80 m/s. The organizers' position controller and RC limits determine actual speed. Krump holds send zero RC through the stock velocity-control model, so the rigid body decelerates rather than freezing in place. Cameras continue facing the room tags; there are no flips or yaw spins.
 
 ## How they interact
 
-Each policy has its own style, seeded random generator, move history, phrase state and decision scores. They observe both drones' measured positions relative to their pads. They retain up to 16 seconds of observations and estimate motion direction and speed over an 0.8-second window.
+Each dancer has its own style, seeded random generator, move history, phrase state and decision scores. They observe measured positions relative to the pads, retain 16 seconds of observations, and estimate partner direction/speed over an 0.8 s window.
 
-- **Lead:** choose a phrase from the dancer's own vocabulary, scoring novelty and its fit to the partner's measured direction. Reconsider the phrase after seven seconds. Slow phrase progression to 70% when the partner's reflected displacement differs by more than 30 cm.
-- **Mirror:** reflect the partner's currently observed X/Y/Z displacement across the center plane between the two pads. This uses observed motion, not the partner's planned trajectory.
-- **Echo:** reflect the partner's motion from 1.2 seconds earlier, interpolating the observation buffer.
-- **Reply:** capture the preceding three seconds of partner motion and reinterpret that recorded motif over a four-second answer. Ari answers traveling steps with a sweep and a hop accent. Sol answers hops with reversed travel in held 16 cm steps and a shallow bow. Future observations cannot rewrite an already captured reply.
+- **Lead:** score phrases for novelty and fit to the partner's measured motion. Reconsider after seven seconds. Slow progression to 70% when reflected displacement differs from the partner by more than 30 cm.
+- **Mirror:** reflect the partner's observed displacement across the lane center plane, then apply the responder's style. This is an interpretation rather than an exact geometric copy.
+- **Echo:** interpret the partner's measured movement from 1.2 seconds earlier, interpolating the observation buffer.
+- **Reply:** capture the previous three seconds of partner movement, rotate that motif into an answering phrase and replay it over four seconds through the responder's style. Future observations cannot rewrite the captured motif.
 
-The follower reconsiders its response every four seconds. Utility scores combine style preferences, current observed partner speed, sufficient history, novelty and a small seeded tie-breaking term. There is no fixed move sequence.
+Ballet smooths and elevates **all** follower modes. Krump quantizes, lowers and punctuates **all** follower modes. A dancer retains its own style when answering a partner with a different style.
 
-Ari starts the invitation. A shared coordinator keeps exactly one leading role. After at least seven seconds in that role, a sustained measured response from the follower (speed above 1.2 cm/s for 0.8 seconds) permits a handoff. A stationary partner does not trigger a handoff merely because time elapsed. Roles can swap several times; each dancer keeps its own style when leading or reinterpreting a reply.
+The follower reconsiders every four seconds. Scores combine style preferences, partner speed, available history, novelty and seeded tie breaking. Ari starts. A shared coordinator permits a leadership handoff after at least seven seconds and measured follower speed above 1.2 cm/s for 0.8 s. A stationary follower does not cause a timed handoff.
 
-This is feedback-driven, rule-based autonomy. It is not learning, language-model reasoning or a distributed protocol running onboard the drones. LFM is not connected to this Python policy.
+This is feedback-driven, rule-based autonomy. LFM, learning and music-driven control are unimplemented. The soundtrack is added during MP4 encoding and does not affect the mission.
 
-## Localization, coordination and limits
+## Localization and limits
 
-The policies run on a shared offboard computer. Each hardware drone's camera observes mapped room AprilTags; the organizers' tracker supplies its position in a shared coordinate frame. The computer shares state between the two dancer policies and sends RC commands over separate Wi-Fi interfaces. Neither drone visually recognizes its partner or communicates directly with it.
+Both policies run on one offboard computer. Each Tello camera localizes against mapped room AprilTags using the organizers' tracker. Shared state gives each policy its partner's estimated position; separate Wi-Fi interfaces carry RC commands. The drones do not visually recognize or directly communicate with each other.
 
-The movement envelope is substantially larger than the shipped clip: targets can travel ±70 cm in X and ±42 cm in Z from the hover point. Lateral travel extends 45 cm outward and at most 10 cm inward, keeping target lanes at least 1.40 m apart. The horizontal RC cap increases from 15 to 35; the original controller's vertical/yaw caps remain 20/25. Target slew increases from 0.10 to 0.30 m/s. These are command limits, not claims that actual motion perfectly tracks the targets.
+Targets allow ±70 cm in X and ±42 cm in Z around hover, 45 cm outward and 10 cm inward per lane. Target lane separation remains at least 1.40 m. Horizontal RC cap is 35, with the original vertical/yaw caps 20/25. Measured envelope, predictive separation, stale-fix, battery, status and watchdog guards remain active. Stale fixes pause choreography and memory; persistent failure requests landing.
 
-Existing measured flight-envelope, predictive separation, stale-localization, battery, status and watchdog checks remain active. Stale fixes freeze both choreography time and motion memory; a persistent failure requests pair landing. The simulator uses nominal delayed tag visibility with ideal velocity/yaw; real flight, including these larger commands, remains untested.
+The local simulator uses delayed geometric tag visibility, ideal velocity/yaw and nominal dynamics without random detection noise. Physical flight remains untested.
 
-Flight JSONL, Isaac pilot logs and local simulation JSON now include each dancer's name, style, mode, gesture, observed partner motion, phrase rate and decision reason. Decision events also include utility scores and role handoffs. These are recorded policy explanations, not fabricated model thoughts.
-
-## Validation without video rendering
+## Measured validation
 
 ```sh
 python -m unittest discover -s tests -v
-python -m duet.metal_record --simulate-only --output-dir outputs/reactive-duet-check
+python -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 ```
 
-The tests check causal mirroring, delayed echo, captured-motif replies, distinct styles, feedback-dependent handoffs, adaptive pacing, stale-fix freezing, bounded trajectories, controller integration and complete takeoff-to-landing rigid-body simulation. They also require at least 65 cm of actual X travel per drone and 22 cm of Hopak height travel in the nominal seed-7 run, so increasing only target values cannot pass the amplitude check. The shipped [clean MP4](../media/drone-duet-hopak-country.mp4) now shows this larger Hopak/country policy, from ground start through landing.
+The tests cover causal responses, captured memory, style persistence, RC holds, feedback-dependent handoffs, stale-fix freezing, deployment guards, original controller integration and a complete rigid-body flight. The seed-7 integration test requires over 80 cm of actual X travel for each drone, over 25 cm of Ballet height travel, a mean height contrast above 30 cm, sustained Ballet motion and measurable Krump braking. Increasing target amplitudes alone cannot satisfy these checks.
 
-Three nominal physics runs (seeds 7, 1, 13) completed the mission with no drone contact; the lowest separation across them was 1.587 m. The seed-7 run used all four interaction modes for each drone and passed the lead three times. [Recorded decisions and measurements](../reports/choreography-check.json) include source hashes for the checked policy.
-
-| Actual peak-to-peak travel during the dance, seed 7 | Earlier shipped clip | Current physics run |
+| Integrated dance motion, seed 7 | Ballet | Krump |
 | --- | --- | --- |
-| Ari forward/back | 0.336 m | 0.760 m |
-| Sol forward/back | 0.322 m | 0.869 m |
-| Ari height | 0.019 m | 0.281 m |
-| Sol height | 0.033 m | 0.100 m |
+| Forward/back peak-to-peak | 0.847 m | 0.878 m |
+| Sideways peak-to-peak | 0.239 m | 0.255 m |
+| Height peak-to-peak | 0.278 m | 0.271 m |
+| Mean height | 1.405 m | 1.059 m |
+| Time below 2.5 cm/s | 1.8% | 12.7% |
 
-These are integrated rigid-body positions during the dance, excluding takeoff/landing. They are not target amplitudes or hardware measurements.
+Krump mean speed falls from 0.110 to 0.033 m/s across the holds. The seed-7 run uses all four interaction modes for both dancers and three leadership handoffs. Seeds 7, 1 and 13 all complete without drone contact; lowest separation across them is 1.502 m. These are nominal simulator results, excluding takeoff/landing, rather than hardware measurements.
+
+[Validation data](../reports/choreography-check.json), [MP4](../media/drone-duet-ballet-krump.mp4), and [provenance](../media/drone-duet-ballet-krump.provenance.json) record the checked version.
