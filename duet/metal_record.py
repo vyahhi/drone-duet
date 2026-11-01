@@ -38,8 +38,11 @@ def rigid_bodies_from_urdf(urdf, physics_dt):
     world = ET.SubElement(root, "worldbody")
     ET.SubElement(world, "geom", name="floor", type="plane", size="10 10 0.1")
     for i, home in enumerate(HOMES):
+        # Match the USD landing pads; start resting on their top surfaces.
+        ET.SubElement(world, "geom", name=f"pad_{i}", type="cylinder", size="0.3 0.005",
+                      pos=f"{home[0]} {home[1]} 0.006")
         yaw = math.atan2(-home[1], -home[0])
-        body = ET.SubElement(world, "body", name=f"drone_{i}", pos=" ".join(str(v) for v in home),
+        body = ET.SubElement(world, "body", name=f"drone_{i}", pos=f"{home[0]} {home[1]} {size[2] + 0.011}",
                              quat=f"{math.cos(yaw / 2)} 0 0 {math.sin(yaw / 2)}")
         ET.SubElement(body, "freejoint", name=f"joint_{i}")
         ET.SubElement(body, "inertial", pos="0 0 0", mass=str(mass),
@@ -50,6 +53,21 @@ def rigid_bodies_from_urdf(urdf, physics_dt):
     mujoco.mj_forward(model, data)
     ids = [model.body(f"drone_{i}").id for i in range(2)]
     return model, data, ids, mass, [float(inertia[k]) for k in ("ixx", "iyy", "izz")]
+
+
+def takeoff_rc(t, positions, vertical_gain):
+    """Local SDK-takeoff approximation: stagger liftoff and taper the climb.
+
+    Uses nominal onboard altitude, like an SDK takeoff, before room localization.
+    The original firmware/rotor controller still produces all applied forces.
+    """
+    commands, armed = [], []
+    for i, (position, home) in enumerate(zip(positions, HOMES)):
+        active = t >= 1.5 + 0.5 * i
+        speed = min(0.30, max(0.0, 1.2 * (home[2] - position[2]))) if active else 0.0
+        commands.append((0, 0, round(speed / vertical_gain), 0))
+        armed.append(active)
+    return commands, armed
 
 
 def simulate(output, *, seed=7, fps=24, dance_seconds=28):
@@ -81,6 +99,10 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
     frames, rows = [], []
     min_gap, max_tilt, landed_at = math.inf, 0.0, None
     contacts = False
+    mission_at = None
+    lifecycle_events = [{"t": 0.0, "phase": "ground"},
+                        {"t": 1.5, "phase": "takeoff", "drone": 0},
+                        {"t": 2.0, "phase": "takeoff", "drone": 1}]
     with torch.inference_mode():
         urdf = str(UPSTREAM / "simulation_infra/assets/tello/tello.urdf")
         model, data, bodies, mass, inertia = rigid_bodies_from_urdf(urdf, physics_dt)
@@ -91,6 +113,9 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
         last_fix_t = [-math.inf, -math.inf]
         decision = None
         commands = [(0, 0, 0, 0)] * 2
+        armed = [False, False]
+        motors_stopped = [False, False]
+        phase = "ground"
         tick = 0
         while tick < 60 / physics_dt:
             t = tick * physics_dt
@@ -134,18 +159,30 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                             last_fix_t[i] = captured_t
                 states = [State(last_fix[i], math.atan2(float(rotation[i, 1, 0]), float(rotation[i, 0, 0])),
                                 t - last_fix_t[i], velocity=tuple(vworld[i])) for i in range(2)]
-                if landed_at is None:
-                    decision = mission.step(states, t)
+                if mission_at is None:
+                    commands, armed = takeoff_rc(t, positions, fit["up"]["gain"])
+                    phase = "takeoff" if any(armed) else "ground"
+                    if t >= 2 and all(abs(p[2] - h[2]) < 0.08 and abs(v[2]) < 0.1
+                                      for p, h, v in zip(positions, HOMES, vworld)):
+                        mission_at = t
+                        lifecycle_events.append({"t": t, "phase": "takeoff_complete"})
+                        print(f"[metal] both takeoffs complete at {t:.2f}s", flush=True)
+                    elif t > 14:
+                        raise RuntimeError("Simulated takeoff timed out")
+                if mission_at is not None and landed_at is None:
+                    decision = mission.step(states, t - mission_at)
+                    phase = decision.phase
                     commands = rc_for_pair(module, states, decision)
                     if decision.land:
                         landed_at = t
                         print(f"[metal] land at {t:.2f}s: {decision.reason}", flush=True)
                 command = rc.command(torch.tensor(commands, dtype=torch.float32))
                 if landed_at is not None:
-                    command[:] = 0
-                    command[:, 2] = -0.4 / cfg.max_speed_z
+                    commands = [(0, 0, round(-0.4 / fit["up"]["gain"]), 0)
+                                if p[2] >= 0.043 else (0, 0, 0, 0) for p in positions]
+                    command = rc.command(torch.tensor(commands, dtype=torch.float32))
                 controller.set_command(command)
-                rows.append({"t": t, "phase": mission.phase, "moves": list(mission.moves),
+                rows.append({"t": t, "phase": phase, "moves": list(mission.moves),
                              "reason": mission.reason, "rc": commands, "positions": positions,
                              "published_positions": last_fix.copy(),
                              "fix_ages": [None if not math.isfinite(s.fix_age) else s.fix_age for s in states],
@@ -159,9 +196,19 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                     orientation.Set(Gf.Quatf(*[float(v) for v in quats[i]]), Usd.TimeCode(frame))
                 frames.append({"t": t, "row": len(rows) - 1, "positions": positions})
             force, torque = controller.compute(v_t, q_t, wb_t, vb_t)
+            idle = [i for i in range(2) if not armed[i] or motors_stopped[i]]
+            if idle:
+                # Keep idle controller integrators and rotor state at rest; no
+                # hidden hover spin-up or accumulated climb before liftoff.
+                ids = torch.tensor(idle)
+                controller.reset(ids, randomize=False)
+                controller.motor_speeds[ids] = 0
+                controller._motor_speeds_des[ids] = 0
             data.xfrc_applied[:] = 0
             for i, body in enumerate(bodies):
-                if landed_at is not None and positions[i][2] < 0.032:
+                if landed_at is not None and positions[i][2] < 0.043:
+                    motors_stopped[i] = True
+                if not armed[i] or motors_stopped[i]:
                     continue
                 rotation = data.xmat[body].reshape(3, 3)
                 data.xfrc_applied[body, :3] = rotation @ force[i].numpy()
@@ -171,7 +218,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
             mujoco.mj_step(model, data)
             tick += 1
             if tick % 2500 == 0:
-                print(f"[metal] simulated {t:.1f}s; phase={mission.phase}; gap={gap:.2f}m", flush=True)
+                print(f"[metal] simulated {t:.1f}s; phase={phase}; gap={gap:.2f}m", flush=True)
             if landed_at is not None and all(p[2] < 0.04 for p in positions) and t - landed_at > 4:
                 break
         if mission.reason != "duet complete":
@@ -185,7 +232,9 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                   "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
                   "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
                   "velocity_observation": "ideal simulator velocity; not camera-estimated",
-                  "start": "already hovering; takeoff excluded", "physical_flight_tested": False,
+                  "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
+                  "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
+                  "takeoff_complete_s": mission_at, "physical_flight_tested": False,
                   "fps": fps, "frame_count": len(frames), "duration_s": len(frames) / fps,
                   "dance_seconds": dance_seconds, "seed": seed, "min_separation_m": min_gap,
                   "max_tilt_deg": max_tilt, "drone_contacts": contacts, "completed": True,
@@ -196,7 +245,9 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                                 UPSTREAM / "drone_deployment_infra/swarm_ops/swarm_formation.py",
                                 UPSTREAM / "drone_deployment_infra/config/map.yaml",
                                 UPSTREAM / "drone_deployment_infra/config/tags.yaml"]},
-                  "events": mission.events, "rows": rows, "frames": frames}
+                  "events": sorted(lifecycle_events + [{**event, "t": round(event["t"] + mission_at, 3)}
+                                                      for event in mission.events], key=lambda e: e["t"]),
+                  "rows": rows, "frames": frames}
         (output / "simulation.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
         return report
 
@@ -222,9 +273,12 @@ def encode(output, report, video):
         row = report["rows"][frame["row"]]
         rec = {"head": "DUET | Action Space scene + Tello model | Apple Metal", "t": frame["t"], "gap": report["min_separation_m"],
                "drones": [{"pad": k, "phase": row["phase"] + ": " + row["moves"][k],
-                           "lost": bool((row["fix_ages"][k] or 0) > 0.35) and row["phase"] != "land",
+                           "lost": bool((row["fix_ages"][k] or 0) > 0.35) and row["phase"] not in ("land", "ground", "takeoff"),
                            "rc": row["rc"][k], "fix_age": row["fix_ages"][k] or 0}
                           for k in range(2)]}
+        if row["phase"] in ("ground", "takeoff"):
+            for k in range(2):
+                rec["drones"][k]["phase"] = "TAKEOFF" if row["rc"][k][2] else "ON PAD | motors off"
         if row["phase"] == "land":
             for k in range(2):
                 rec["drones"][k]["phase"] = "LANDED on spot" if frame["positions"][k][2] < 0.04 else "LANDING"

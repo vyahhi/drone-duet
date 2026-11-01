@@ -35,6 +35,29 @@ class MetalPortTests(unittest.TestCase):
             original_size = [float(v) / 2 for v in original.find("collision/geometry/box").attrib["size"].split()]
             np.testing.assert_allclose(model.geom_size[collision], original_size)
         self.assertGreater(math.dist(data.xpos[ids[0]], data.xpos[ids[1]]), 1.5)
+        for body in ids:
+            self.assertAlmostEqual(data.xpos[body][2], original_size[2] + 0.011)
+
+    def test_ground_takeoff_dance_and_landing_use_integrated_rigid_bodies(self):
+        from duet.metal_record import simulate
+        with tempfile.TemporaryDirectory() as tmp:
+            report = simulate(Path(tmp), dance_seconds=4)
+        self.assertTrue(report["completed"])
+        self.assertFalse(report["drone_contacts"])
+        rows = report["rows"]
+        self.assertEqual(rows[0]["phase"], "ground")
+        for row in rows:
+            for i, position in enumerate(row["positions"]):
+                if row["t"] < 1.5 + i * 0.5:
+                    self.assertAlmostEqual(position[2], 0.0315, delta=0.001)
+                    self.assertEqual(row["rc"][i], (0, 0, 0, 0))
+        self.assertTrue(any(r["phase"] == "takeoff" and r["positions"][0][2] > 0.3
+                            for r in rows))
+        first_dance = next(r for r in rows if r["phase"] == "dance")
+        self.assertTrue(all(p[2] > 1.0 for p in first_dance["positions"]))
+        self.assertTrue(all(p[2] < 0.04 for p in report["frames"][-1]["positions"]))
+        self.assertGreater(report["takeoff_complete_s"], 2)
+        self.assertGreater(report["min_separation_m"], 1.2)
 
     def test_original_usd_scene_is_usable_and_only_portable_stage_hook_is_patched(self):
         from duet.metal_scene import create_scene

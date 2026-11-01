@@ -29,71 +29,91 @@
     "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
     "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
     "velocity_observation": "ideal simulator velocity; not camera-estimated",
-    "start": "already hovering; takeoff excluded",
+    "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
+    "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
+    "takeoff_complete_s": 6.3500000000000005,
     "physical_flight_tested": false,
     "fps": 24,
-    "frame_count": 829,
-    "duration_s": 34.541666666666664,
+    "frame_count": 979,
+    "duration_s": 40.791666666666664,
     "dance_seconds": 28,
     "seed": 7,
-    "min_separation_m": 1.3979215621948242,
-    "max_tilt_deg": 1.9684220872088174,
+    "min_separation_m": 1.4223467111587524,
+    "max_tilt_deg": 2.026589604820504,
     "drone_contacts": false,
     "completed": true,
-    "wall_seconds_simulating": 38.25126520800404,
+    "wall_seconds_simulating": 15.61424666599487,
     "events": [
       {
-        "t": 0.15,
+        "t": 0.0,
+        "phase": "ground"
+      },
+      {
+        "t": 1.5,
+        "phase": "takeoff",
+        "drone": 0
+      },
+      {
+        "t": 2.0,
+        "phase": "takeoff",
+        "drone": 1
+      },
+      {
+        "t": 6.35,
         "phase": "settle"
       },
       {
-        "t": 1.15,
+        "t": 6.3500000000000005,
+        "phase": "takeoff_complete"
+      },
+      {
+        "t": 7.35,
         "phase": "dance"
       },
       {
-        "t": 1.15,
+        "t": 7.35,
         "drone": 0,
         "move": "breath",
         "partner": "canon"
       },
       {
-        "t": 5.1,
+        "t": 11.3,
         "drone": 1,
         "move": "mirror",
         "partner": "breath"
       },
       {
-        "t": 9.15,
+        "t": 15.3,
         "drone": 0,
         "move": "canon",
         "partner": "mirror"
       },
       {
-        "t": 13.1,
+        "t": 19.3,
         "drone": 1,
         "move": "canon",
         "partner": "canon"
       },
       {
-        "t": 17.1,
+        "t": 23.3,
         "drone": 0,
         "move": "breath",
         "partner": "canon"
       },
       {
-        "t": 21.1,
+        "t": 27.3,
         "drone": 1,
         "move": "breath",
         "partner": "breath"
       },
       {
-        "t": 25.1,
+        "t": 31.3,
         "drone": 0,
         "move": "mirror",
         "partner": "breath"
       },
       {
-        "t": 29.1,
+        "t": 35.3,
         "phase": "return"
       }
     ]
@@ -109,13 +129,15 @@
   },
   "video": {
     "path": "drone-duet-metal.mp4",
-    "sha256": "53d9f1468fa03b8ba3513bd18c95391843d53bcd6de6b0fb101884dac75051c3",
+    "sha256": "7ff54269f7786ef95697e9132a5c40925617617da0034ff2d927de1d02ead921",
     "full_decode_check": "passed",
     "visual_check_frames": [
       0,
-      288,
-      576,
-      816
+      72,
+      144,
+      360,
+      720,
+      978
     ]
   },
   "physical_flight_tested": false

@@ -6,7 +6,9 @@ The user approved using the organizers’ scene/code with a local renderer after
 
 ## Result
 
-H.264 MP4, 1280×720, 24 fps, 829 frames, 34.54 seconds. The two drones start hovering, perform 28 seconds of autonomous lane-bounded choreography, return to their pads, and land. Minimum 3D separation is 1.398 m; no drone-to-drone contacts were detected. Maximum tilt is 1.97°. The MP4 was decoded in full and frames from the start, dance and landing were visually checked.
+H.264 MP4, 1280×720, 24 fps, 979 frames, 40.79 seconds. The two drones start resting on their pads with motors off. After a 1.5-second ground hold, they take off half a second apart, reach hover, perform 28 seconds of autonomous lane-bounded choreography, return to their pads, and land. Minimum 3D separation is 1.422 m; no drone-to-drone contacts were detected. Maximum tilt is 2.03°.
+
+The original firmware/rotor model drives the ascent; poses are integrated by MuJoCo, not animated to target heights. The local takeoff procedure approximates the SDK's onboard altitude control using ideal simulated altitude; it is not a reproduction of proprietary Tello takeoff firmware. Both takeoffs complete at 6.35 seconds. The MP4 is decoded in full and frames from the ground start, takeoff, dance and landing are visually checked.
 
 ## What actually comes from the organizers
 
@@ -24,6 +26,14 @@ All organizer sources are pinned to `jaromero3rd/Action_Space` commit `cd6536a45
 Our code supplies the autonomous mission, source-loading/portability layer, literal URDF-to-USD/MuJoCo conversion, trajectory export, and video orchestration. The local physics backend is **MuJoCo CPU**, rather than Isaac PhysX; rendered poses come from the simulated rigid bodies, not direct animation of target coordinates. All two-drone physics runs in one world with contacts enabled. The camera sphere’s negligible fixed-link mass is omitted; the original base inertia/mass/collision box is retained. Walls are visual; the mission’s measured flight envelope guards room limits.
 
 The new lane-bounded mission is a smaller physical-flight design than the browser’s large paths. It uses seeded procedural choices and measured partner response, not LFM3 or trained-policy weights. Hardware safety and transfer have not been established by this video.
+
+## Dance selection and coordination
+
+`duet/mission.py` chooses from **mirror, canon, breath, bow** every eight seconds per drone, with choices staggered by four seconds. Weighted random choices favor a coded response to the partner's current move and avoid immediately repeating the dancer's own move. Seed 7 makes this recording reproducible. Canon also responds to the partner's measured height. Motion primitives, timing and response rules are coded; there is no model inference or learning in this mission.
+
+Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
+
+The separate browser demo has an optional OpenAI-compatible model endpoint adapter. That adapter is not connected to this Python mission; LFM-driven selection for this video or physical duet remains unimplemented.
 
 ## Reproduce
 
