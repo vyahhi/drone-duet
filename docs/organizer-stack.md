@@ -32,14 +32,14 @@ Outputs:
 
 The command checks the actual files and reports after the renderer exits. It requires `duet complete`, a completed episode and successful landing; an Isaac process exit code alone is insufficient. A failed attempt may leave a diagnostic video; it is not a successful duet. Choose a new `--out` path for each retry.
 
-On this Mac you can only prepare and inspect the code:
+On this Mac you can prepare the original recorder without running its NVIDIA renderer:
 
 ```sh
 python3 -m duet.bootstrap
 python3 -m duet.record --prepare-only
 ```
 
-**No MP4 has been rendered or visually checked yet.** This machine is Apple Silicon without NVIDIA/Isaac, and no remote GPU host is available. The browser recording is not a substitute for the requested original-renderer MP4.
+**No MP4 has been rendered or visually checked yet.** The [community Apple port is installed and verified](isaac-apple.md), but it lacks the original Omniverse renderer. NVIDIA Isaac Sim has no compatible macOS package, and no remote GPU host is available. The browser recording is not a substitute for the requested original-renderer MP4.
 
 ## Physical two-Tello duet
 
