@@ -55,6 +55,7 @@ class DuetPilot:
             u.landing[:] = True
         actions = [[*(v / 100 for v in row), 1.0 if d.land else -1.0] for row in rc]
         self.rows.append({"t": t, "phase": d.phase, "moves": list(self.mission.moves),
+                          "dancers": self.mission.choreography.snapshot(),
                           "reason": d.reason, "targets": d.targets, "rc": rc,
                           "published_positions": [s.position for s in states],
                           "true_positions_diagnostic_only": u._positions()[0].cpu().tolist()})
@@ -62,7 +63,9 @@ class DuetPilot:
 
     def annotate(self, rec):
         for i, row in enumerate(rec["drones"]):
-            row["phase"] = f"{self.mission.phase}: {self.mission.moves[i]}"
+            dancer = self.mission.choreography.dancers[i]
+            row["phase"] = (f"{dancer.profile.name}/{dancer.profile.style} {self.mission.moves[i]}"
+                            if self.mission.phase == "dance" else self.mission.phase)
 
     def save(self, path):
         import math

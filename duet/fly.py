@@ -174,6 +174,7 @@ def main():
                 raise RuntimeError("Takeoff height not confirmed")
             time.sleep(0.05)
         started = time.monotonic()
+        logged_events = 0
         with args.log.open("w") as log:
             log.write(json.dumps({"event": "start", "lane_ids": [d.num for d in drones],
                                   "tag_height": args.tag_height, "seed": args.seed}) + "\n")
@@ -191,9 +192,12 @@ def main():
                     d.last_rc = rc
                     d.send_noreply("rc " + " ".join(str(v) for v in rc))
                 log.write(json.dumps({"t": tick - started, "phase": decision.phase, "reason": decision.reason,
+                                      "dancers": mission.choreography.snapshot(),
+                                      "events": mission.events[logged_events:],
                                       "moves": list(mission.moves), "targets": decision.targets, "rc": commands,
                                       "positions": [s.position for s in states]}) + "\n")
                 log.flush()
+                logged_events = len(mission.events)
                 if decision.land:
                     print("Landing pair:", decision.reason)
                     return 0 if decision.reason == "duet complete" else 1

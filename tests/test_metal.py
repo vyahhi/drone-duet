@@ -41,7 +41,7 @@ class MetalPortTests(unittest.TestCase):
     def test_ground_takeoff_dance_and_landing_use_integrated_rigid_bodies(self):
         from duet.metal_record import simulate
         with tempfile.TemporaryDirectory() as tmp:
-            report = simulate(Path(tmp), dance_seconds=4)
+            report = simulate(Path(tmp), dance_seconds=28)
         self.assertTrue(report["completed"])
         self.assertFalse(report["drone_contacts"])
         rows = report["rows"]
@@ -58,6 +58,18 @@ class MetalPortTests(unittest.TestCase):
         self.assertTrue(all(p[2] < 0.04 for p in report["frames"][-1]["positions"]))
         self.assertGreater(report["takeoff_complete_s"], 2)
         self.assertGreater(report["min_separation_m"], 1.2)
+        # Exercise the full feedback loop with tag delay and the original firmware,
+        # including role swaps and every measured-motion response mode.
+        for i in range(2):
+            choices = [e for e in report["events"] if e.get("drone") == i and "move" in e]
+            self.assertEqual({e["move"] for e in choices}, {"lead", "mirror", "echo", "reply"})
+        self.assertGreaterEqual(sum("handoff" in e for e in report["events"]), 2)
+        dance = [row for row in rows if row["phase"] == "dance"]
+        for i in range(2):
+            travel_x = max(r["positions"][i][0] for r in dance) - min(r["positions"][i][0] for r in dance)
+            self.assertGreater(travel_x, 0.65)  # actual rigid-body travel, not target amplitude
+        hopak_height = max(r["positions"][0][2] for r in dance) - min(r["positions"][0][2] for r in dance)
+        self.assertGreater(hopak_height, 0.22)
 
     def test_original_usd_scene_is_usable_and_only_portable_stage_hook_is_patched(self):
         from duet.metal_scene import create_scene

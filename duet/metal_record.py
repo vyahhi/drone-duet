@@ -183,6 +183,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                     command = rc.command(torch.tensor(commands, dtype=torch.float32))
                 controller.set_command(command)
                 rows.append({"t": t, "phase": phase, "moves": list(mission.moves),
+                             "dancers": mission.choreography.snapshot(),
                              "reason": mission.reason, "rc": commands, "positions": positions,
                              "published_positions": last_fix.copy(),
                              "fix_ages": [None if not math.isfinite(s.fix_age) else s.fix_age for s in states],
@@ -235,6 +236,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                   "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
                   "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
                   "takeoff_complete_s": mission_at, "physical_flight_tested": False,
+                  "choreography": "measured-motion utility policies, Hopak and Country dance styles; no LFM inference",
                   "fps": fps, "frame_count": len(frames), "duration_s": len(frames) / fps,
                   "dance_seconds": dance_seconds, "seed": seed, "min_separation_m": min_gap,
                   "max_tilt_deg": max_tilt, "drone_contacts": contacts, "completed": True,
@@ -271,8 +273,11 @@ def encode(output, report, video):
         if not path.is_file():
             raise RuntimeError("Missing rendered frame: " + str(path))
         row = report["rows"][frame["row"]]
+        labels = [row["phase"] + ": " + move for move in row["moves"]]
+        if row["phase"] == "dance" and "dancers" in row:
+            labels = [f"{d['name']}/{d['style']} {d['mode']}" for d in row["dancers"]]
         rec = {"head": "DUET | Action Space scene + Tello model | Apple Metal", "t": frame["t"], "gap": report["min_separation_m"],
-               "drones": [{"pad": k, "phase": row["phase"] + ": " + row["moves"][k],
+               "drones": [{"pad": k, "phase": labels[k],
                            "lost": bool((row["fix_ages"][k] or 0) > 0.35) and row["phase"] not in ("land", "ground", "takeoff"),
                            "rc": row["rc"][k], "fix_age": row["fix_ages"][k] or 0}
                           for k in range(2)]}

@@ -29,7 +29,9 @@ The new lane-bounded mission is a smaller physical-flight design than the browse
 
 ## Dance selection and coordination
 
-`duet/mission.py` chooses from **mirror, canon, breath, bow** every eight seconds per drone, with choices staggered by four seconds. Weighted random choices favor a coded response to the partner's current move and avoid immediately repeating the dancer's own move. Seed 7 makes this recording reproducible. Canon also responds to the partner's measured height. Motion primitives, timing and response rules are coded; there is no model inference or learning in this mission.
+**The shipped MP4 shows the earlier policy:** four moves (**mirror, canon, breath, bow**), selected every eight seconds per drone with choices staggered by four seconds. Seed 7 makes that recording reproducible. Canon responds to the partner's measured height. There is no model inference or learning in that recording.
+
+**The current code has a new [partner-responsive policy](choreography.md)** with larger Hopak/country dance phrases, measured-motion mirrors, delayed echoes, captured-motif replies, adaptive pacing and feedback-dependent leadership handoffs. At the user's request, this new policy has been tested without rendering a replacement video. Reproducing the simulator with the current code therefore generates the new behavior, rather than the exact older clip above.
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 

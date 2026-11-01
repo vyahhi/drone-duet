@@ -75,10 +75,10 @@ The controller performs these phases without speech or pilot prompts:
 1. Both pass the organizers’ link, battery and video checks. Takeoffs are staggered 0.5 s; either failure lands the pair.
 2. Hover while both acquire fresh mapped tag fixes, up to 8 s. Floor-level cameras may not see elevated tags before takeoff, so placement must be on the marked pads. The measured envelope/lane checks apply on acquisition.
 3. Settle at homes, with 1 s stable dwell.
-4. Dance for 28 s. Each agent selects mirror/canon/breath/bow independently every 8 s, staggered by 4 s, with choices weighted toward a complementary reply. Canon also follows the partner’s measured vertical motion. Targets move at most 0.1 m/s. This is bounded procedural autonomy, not learned flight or LFM3.
+4. Dance for 28 s using the [partner-responsive Hopak/country policy](choreography.md). Agents choose leading phrases, measured-motion mirrors, delayed echoes or captured-motif replies. They trade the lead after sustained measured engagement. Targets move at most 0.30 m/s. This is bounded procedural autonomy, not learned flight or LFM3.
 5. Return home, dwell, land both and wait for the organizers’ landing-confirmation routine.
 
-The original `swarm_formation.control` converts targets to bounded RC commands: horizontal cap 15, vertical cap 20 and yaw cap 25. Drones keep cameras facing tag 10 rather than turning toward one another. The dance is deliberately small: approximately 32 cm depth travel, 24 cm lateral travel per lane and 18 cm height travel.
+The original `swarm_formation.control` converts targets to bounded RC commands: horizontal cap 35, vertical cap 20 and yaw cap 25. Drones keep cameras facing tag 10 rather than turning toward one another. Targets allow up to 1.40 m of depth travel, 55 cm of lateral travel per lane and 84 cm of height travel; actual rigid-body travel is checked separately because firmware lag and slew limits reduce it. This is larger than the earlier shipped video and has not been physically flight-tested.
 
 Safety behavior implemented:
 

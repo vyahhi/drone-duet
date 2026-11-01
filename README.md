@@ -6,7 +6,9 @@ A live experiment in autonomous choreography, built for Sundai’s drone hack at
 
 The project now also includes a **two-Tello flight adapter** and an **Isaac MP4 recorder using the organizers’ original simulation code**. Organizer approval for two drones flying has been granted. The flight/Isaac controller uses a separate, smaller, lane-bounded dance suited to tag tracking; it does not send the browser’s large trajectories to hardware.
 
-**Video delivered:** [40.8-second drone duet MP4](media/drone-duet-metal.mp4), from ground start through staggered takeoff, dance, return and landing, rendered locally from the organizers’ actual USD room-building code and original Tello URDF. It uses their Tello firmware, RC controller and tag sensor model, with our autonomous duet mission. As approved for this Mac, the backend is **MuJoCo physics + Apple Hydra Metal**, rather than NVIDIA PhysX/RTX. See [render instructions and provenance](docs/metal-video.md).
+**Current drone policy:** [Ari's Hopak-inspired style and Sol's country line dance](docs/choreography.md), with substantially larger travel, measured-motion mirroring, delayed echoes, recorded-motif replies, adaptive pacing and leadership handoffs. This is shared by the hardware adapter and simulators. It uses feedback-driven rules, not LFM. The new behavior is tested without rendering a new video, as requested.
+
+**Earlier video:** [40.8-second drone duet MP4](media/drone-duet-metal.mp4), from ground start through staggered takeoff, dance, return and landing, rendered locally from the organizers’ actual USD room-building code and original Tello URDF. It shows the previous four-move policy. As approved for this Mac, the backend is **MuJoCo physics + Apple Hydra Metal**, rather than NVIDIA PhysX/RTX. See [render instructions and provenance](docs/metal-video.md).
 
 **Validation status:** browser and Python mission/controller tests pass, including local rigid-body/scene checks. The experimental community IsaacLab-MLX port also runs on this Mac’s M4 GPU; its original quadcopter example and 34 runtime/quadcopter tests pass. Physical flight and the NVIDIA Isaac Sim backend remain unvalidated.
 
@@ -57,7 +59,7 @@ This is high-level autonomous choreography over designed motion primitives. It i
 
 ## Optional LFM3 choreography
 
-This optional adapter applies to the browser demo. The Python hardware mission and Metal/MuJoCo video currently use four procedural moves, with no LFM inference. They coordinate through a shared computer using each drone's room-tag position estimate; they do not visually recognize one another or exchange direct drone-to-drone messages. See [the implemented coordination details](docs/metal-video.md#dance-selection-and-coordination).
+This optional adapter applies to the browser demo. The Python drone mission uses the [partner-responsive policy](docs/choreography.md), with no LFM inference. It coordinates through a shared computer using each drone's room-tag position estimate; the drones do not visually recognize one another or exchange direct drone-to-drone messages.
 
 The application also has a real server-side inference adapter for **LFM3-1.7B** or another model served through an OpenAI-compatible `/chat/completions` endpoint. A text model is sufficient because it receives structured observations from the simulation. No screenshot or vision model is needed for this version.
 

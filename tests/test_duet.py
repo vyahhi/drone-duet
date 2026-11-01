@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from duet import fly
+from duet.choreography import TARGET_SPEED, RC_XY_CAP
 from duet.fly import PairWatchdog, calibration_check, land_pair
 from duet.mission import HOMES, MOVES, Mission, State
 from duet.record import prepare
@@ -32,11 +33,11 @@ class MissionTests(unittest.TestCase):
                     break
                 if d.targets:
                     a, b = d.targets
-                    self.assertLessEqual(a[1], -0.68 + 1e-6)
-                    self.assertGreaterEqual(b[1], 0.68 - 1e-6)
+                    self.assertLessEqual(a[1], -0.70 + 1e-6)
+                    self.assertGreaterEqual(b[1], 0.70 - 1e-6)
                     self.assertGreater(math.hypot(a[0] - b[0], a[1] - b[1]), 1.25)
                     if old:
-                        self.assertTrue(all(math.dist(p, q) <= 0.005001 for p, q in zip(old, d.targets)))
+                        self.assertTrue(all(math.dist(p, q) <= TARGET_SPEED * 0.05 + 1e-6 for p, q in zip(old, d.targets)))
                     old = d.targets
                     states = [dataclasses.replace(s, position=p) for s, p in zip(states, d.targets)]
             else:
@@ -120,7 +121,7 @@ class AdapterTests(unittest.TestCase):
         d = dataclasses.replace(d, targets=((2.6, -0.9, 1.3), (2.6, 0.9, 1.3)))
         commands = rc_for_pair(module, states, d)
         for command in commands:
-            self.assertTrue(all(abs(v) <= cap for v, cap in zip(command, (15, 15, 20, 25))))
+            self.assertTrue(all(abs(v) <= cap for v, cap in zip(command, (RC_XY_CAP, RC_XY_CAP, 20, 25))))
             self.assertGreater(command[2], 0)
         self.assertLess(commands[0][0], 0)  # drone facing the tag, negative Y is left
         self.assertGreater(commands[1][0], 0)

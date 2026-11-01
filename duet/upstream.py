@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .choreography import RC_XY_CAP
+
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = ROOT / "vendor/action-space"
 REVISION = "cd6536a458c3ba034a727ea00f57adac6bed9471"
@@ -55,6 +57,6 @@ def rc_for_pair(module, states, decision, tag_height=1.22):
         psi = (180 - math.degrees(s.yaw) + 180) % 360 - 180
         rc, _, _ = module.control(positions[i], psi,
                                   np.asarray(to_internal(decision.targets[i], tag_height)),
-                                  [(positions[1 - i], 0.0)], cap=15)
+                                  [(positions[1 - i], 0.0)], cap=RC_XY_CAP)
         result.append(rc)
     return result

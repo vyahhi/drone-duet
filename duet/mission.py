@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import math
-import random
 from dataclasses import dataclass
+
+from .choreography import Choreography, MOVES, TARGET_SPEED
 
 Vec = tuple[float, float, float]
 HOMES: tuple[Vec, Vec] = ((2.5, -0.8, 1.22), (2.5, 0.8, 1.22))
-MOVES = ("mirror", "canon", "breath", "bow")
 
 
 def distance(a, b):
@@ -42,16 +42,15 @@ class Mission:
     def __init__(self, seed=7, dance_seconds=28.0):
         if not 4 <= dance_seconds <= 28:
             raise ValueError("dance_seconds must be between 4 and 28")
-        self.rng = random.Random(seed)
         self.dance_seconds = dance_seconds
         self.phase, self.reason = "acquire", ""
         self.phase_at = self.last_t = 0.0
         self.dance_t = 0.0
         self.stable_at = self.paused_at = None
-        self.moves = ["mirror", "canon"]
-        self.next_choice = [0.0, 4.0]
+        self.moves = ["lead", "mirror"]
         self.targets = list(HOMES)
         self.events = []
+        self.choreography = Choreography(HOMES, seed, self.events)
         self.min_measured_gap = math.inf
 
     def stop(self, reason):
@@ -131,36 +130,11 @@ class Mission:
             self.dance_t += dt
             if self.dance_t >= self.dance_seconds:
                 self._phase("return", t)
-        raw = self._dance_targets(t, positions) if self.phase == "dance" else HOMES
-        # Smooth phrase changes, including the return to home. At most 0.1 m/s.
+        raw = self.choreography.step(states, self.dance_t, t) if self.phase == "dance" else HOMES
+        self.moves = [d.mode for d in self.choreography.dancers]
+        # Smooth phrase changes, including the return to home.
         for i, target in enumerate(raw):
             delta = tuple(target[k] - self.targets[i][k] for k in range(3))
-            scale = min(1.0, 0.1 * dt / max(1e-12, math.dist(target, self.targets[i])))
+            scale = min(1.0, TARGET_SPEED * dt / max(1e-12, math.dist(target, self.targets[i])))
             self.targets[i] = tuple(self.targets[i][k] + scale * delta[k] for k in range(3))
         return Decision(self.phase, tuple(self.targets))
-
-    def _dance_targets(self, t, positions):
-        for i in range(2):
-            if self.dance_t >= self.next_choice[i]:
-                partner = self.moves[1 - i]
-                choices = [m for m in MOVES if m != self.moves[i]]
-                # Each dancer responds to the partner independently, on staggered phrases.
-                reply = {"mirror": "canon", "canon": "breath", "breath": "bow", "bow": "mirror"}[partner]
-                weights = [3 if m == reply else 1 for m in choices]
-                self.moves[i] = self.rng.choices(choices, weights=weights)[0]
-                self.next_choice[i] += 8
-                self.events.append({"t": round(t, 3), "drone": i, "move": self.moves[i], "partner": partner})
-        result = []
-        for i, home in enumerate(HOMES):
-            move = self.moves[i]
-            phase = 2 * math.pi * self.dance_t / 12
-            # Canon responds to the partner's measured vertical displacement.
-            echo = max(-0.09, min(0.09, positions[1 - i][2] - HOMES[1 - i][2]))
-            offsets = {
-                "mirror": (0.16 * math.sin(phase), (1 if i else -1) * 0.12 * math.cos(phase), 0.07 * math.sin(phase)),
-                "canon": (0.14 * math.sin(phase - math.pi / 2), 0.10 * math.cos(phase), echo),
-                "breath": (0.08 * math.sin(phase), (1 if i else -1) * 0.10 * math.sin(phase), 0.09 * math.sin(phase)),
-                "bow": (0.16 * math.sin(phase), 0.0, -0.08 * (1 + math.sin(phase)) / 2),
-            }[move]
-            result.append(tuple(home[k] + offsets[k] for k in range(3)))
-        return result

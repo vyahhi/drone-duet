@@ -1,0 +1,810 @@
+{
+  "physics": "MuJoCo with original Tello controller and delayed geometric room-tag visibility",
+  "hardware_tested": false,
+  "video_rendered": false,
+  "source_sha256": {
+    "duet/choreography.py": "6c9f8747a2ec3505a478966127a7c31a25716a506f10ff417fa5f2a0388f6a11",
+    "duet/mission.py": "fdfb949385f4922eae67d137f02eef6f52d8697e9f1a55b38787bc9e1cf7683c",
+    "duet/upstream.py": "2de25e34dd35dff62508d01bf302dd18c966946f668956c0c492de6170906b81"
+  },
+  "runs": [
+    {
+      "seed": 7,
+      "completed": true,
+      "min_separation_m": 1.600000023841858,
+      "max_tilt_deg": 2.020986448707455,
+      "drone_contacts": false,
+      "actual_dance_xyz_peak_to_peak_m": [
+        [
+          0.7603635515880898,
+          0.3722517275925351,
+          0.28090254885418875
+        ],
+        [
+          0.8689838950081885,
+          0.3850687994785702,
+          0.10046602715135
+        ]
+      ],
+      "handoffs": [
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "handoff": [
+            1,
+            0
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        }
+      ],
+      "choices": [
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "invite partner with my own style",
+          "scores": {
+            "hop": 1.549,
+            "squat": 1.023,
+            "sweep": 1.098
+          }
+        },
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.436,
+            "echo": -1.061,
+            "reply": -0.665
+          }
+        },
+        {
+          "t": 11.4,
+          "dance_t": 4.1,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "reply",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 0.856,
+            "echo": 1.464,
+            "reply": 1.515
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.052,
+            "shuffle": 1.074,
+            "box_step": 1.07
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.507,
+            "echo": 1.954,
+            "reply": 1.387
+          }
+        },
+        {
+          "t": 18.35,
+          "dance_t": 11.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "mirror",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "side",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.506,
+            "echo": 0.751,
+            "reply": 1.354
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "sweep",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "hop": 0.565,
+            "squat": 1.01,
+            "sweep": 1.014
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "sweep",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.691,
+            "echo": 1.448,
+            "reply": 1.101
+          }
+        },
+        {
+          "t": 25.35,
+          "dance_t": 18.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "echo",
+          "gesture": "sweep",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "rise",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 0.728,
+            "echo": 1.458,
+            "reply": 1.068
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.088,
+            "shuffle": 0.549,
+            "box_step": 1.054
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.142,
+            "echo": 1.583,
+            "reply": 1.362
+          }
+        },
+        {
+          "t": 32.35,
+          "dance_t": 25.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "reply",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 1.122,
+            "echo": 0.629,
+            "reply": 1.445
+          }
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "completed": true,
+      "min_separation_m": 1.5872400999069214,
+      "max_tilt_deg": 2.0355138771685075,
+      "drone_contacts": false,
+      "actual_dance_xyz_peak_to_peak_m": [
+        [
+          0.830482062350359,
+          0.3016449856435103,
+          0.34992718191946603
+        ],
+        [
+          1.0149290011835252,
+          0.3297509430402752,
+          0.10046602715135
+        ]
+      ],
+      "handoffs": [
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "handoff": [
+            1,
+            0
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        }
+      ],
+      "choices": [
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "hop",
+          "partner": "mirror",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "invite partner with my own style",
+          "scores": {
+            "hop": 1.52,
+            "squat": 1.127,
+            "sweep": 1.115
+          }
+        },
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 0.667,
+            "echo": -1.014,
+            "reply": -0.675
+          }
+        },
+        {
+          "t": 11.4,
+          "dance_t": 4.1,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "reply",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 0.808,
+            "echo": 1.443,
+            "reply": 1.466
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.066,
+            "shuffle": 1.109,
+            "box_step": 1.031
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.526,
+            "echo": 1.95,
+            "reply": 1.395
+          }
+        },
+        {
+          "t": 18.35,
+          "dance_t": 11.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "mirror",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "side",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.565,
+            "echo": 0.779,
+            "reply": 1.359
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "hop": 0.504,
+            "squat": 1.125,
+            "sweep": 1.065
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.683,
+            "echo": 1.451,
+            "reply": 1.101
+          }
+        },
+        {
+          "t": 25.35,
+          "dance_t": 18.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "echo",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 0.766,
+            "echo": 1.458,
+            "reply": 1.065
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "rise",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.572,
+            "shuffle": 0.616,
+            "box_step": 1.055
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.176,
+            "echo": 1.5,
+            "reply": 1.395
+          }
+        },
+        {
+          "t": 32.35,
+          "dance_t": 25.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "reply",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 1.172,
+            "echo": 0.59,
+            "reply": 1.445
+          }
+        }
+      ]
+    },
+    {
+      "seed": 13,
+      "completed": true,
+      "min_separation_m": 1.5872400999069214,
+      "max_tilt_deg": 2.0355138771685075,
+      "drone_contacts": false,
+      "actual_dance_xyz_peak_to_peak_m": [
+        [
+          0.830482062350359,
+          0.3016449856435103,
+          0.34992718191946603
+        ],
+        [
+          1.0149290011835252,
+          0.3297509430402752,
+          0.10046602715135
+        ]
+      ],
+      "handoffs": [
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "handoff": [
+            1,
+            0
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "handoff": [
+            0,
+            1
+          ],
+          "reason": "partner moving for at least 0.8 s; leadership lease released"
+        }
+      ],
+      "choices": [
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "hop",
+          "partner": "mirror",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "invite partner with my own style",
+          "scores": {
+            "hop": 1.539,
+            "squat": 1.103,
+            "sweep": 1.103
+          }
+        },
+        {
+          "t": 7.35,
+          "dance_t": 0.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "still",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 0.613,
+            "echo": -1.007,
+            "reply": -0.664
+          }
+        },
+        {
+          "t": 11.4,
+          "dance_t": 4.1,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "reply",
+          "gesture": "hop",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 0.882,
+            "echo": 1.454,
+            "reply": 1.516
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.108,
+            "shuffle": 1.129,
+            "box_step": 1.036
+          }
+        },
+        {
+          "t": 14.3,
+          "dance_t": 7.0,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "back",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.585,
+            "echo": 1.919,
+            "reply": 1.373
+          }
+        },
+        {
+          "t": 18.35,
+          "dance_t": 11.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "mirror",
+          "gesture": "shuffle",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "side",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.515,
+            "echo": 0.723,
+            "reply": 1.423
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "lead",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "hop": 0.52,
+            "squat": 1.08,
+            "sweep": 1.032
+          }
+        },
+        {
+          "t": 21.35,
+          "dance_t": 14.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "mirror",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "back",
+          "reason": "reflect partner's measured motion across the two lanes",
+          "scores": {
+            "mirror": 1.605,
+            "echo": 1.427,
+            "reply": 1.123
+          }
+        },
+        {
+          "t": 25.35,
+          "dance_t": 18.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "echo",
+          "gesture": "squat",
+          "partner": "lead",
+          "leader": 0,
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 0.751,
+            "echo": 1.438,
+            "reply": 1.062
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 1,
+          "name": "Sol",
+          "style": "Country",
+          "move": "lead",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "rise",
+          "reason": "take the lead after sustained measured engagement",
+          "scores": {
+            "two_step": 1.559,
+            "shuffle": 0.646,
+            "box_step": 1.068
+          }
+        },
+        {
+          "t": 28.35,
+          "dance_t": 21.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "echo",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "forward",
+          "reason": "follow partner's measured motion 1.2 seconds later",
+          "scores": {
+            "mirror": 1.129,
+            "echo": 1.543,
+            "reply": 1.434
+          }
+        },
+        {
+          "t": 32.35,
+          "dance_t": 25.05,
+          "drone": 0,
+          "name": "Ari",
+          "style": "Hopak",
+          "move": "reply",
+          "gesture": "two_step",
+          "partner": "lead",
+          "leader": 1,
+          "observed_partner_motion": "forward",
+          "reason": "answer a recorded partner motif in my own style",
+          "scores": {
+            "mirror": 1.161,
+            "echo": 0.568,
+            "reply": 1.378
+          }
+        }
+      ]
+    }
+  ]
+}
