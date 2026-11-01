@@ -43,7 +43,7 @@ python -m unittest discover -s tests -v
 python -m duet.metal_record --simulate-only --output-dir outputs/reactive-duet-check
 ```
 
-The tests check causal mirroring, delayed echo, captured-motif replies, distinct styles, feedback-dependent handoffs, adaptive pacing, stale-fix freezing, bounded trajectories, controller integration and complete takeoff-to-landing rigid-body simulation. They also require at least 65 cm of actual X travel per drone and 22 cm of Hopak height travel in the nominal seed-7 run, so increasing only target values cannot pass the amplitude check. The new code has not been rendered into a video; the shipped MP4 still shows the earlier four-move policy.
+The tests check causal mirroring, delayed echo, captured-motif replies, distinct styles, feedback-dependent handoffs, adaptive pacing, stale-fix freezing, bounded trajectories, controller integration and complete takeoff-to-landing rigid-body simulation. They also require at least 65 cm of actual X travel per drone and 22 cm of Hopak height travel in the nominal seed-7 run, so increasing only target values cannot pass the amplitude check. The shipped [clean MP4](../media/drone-duet-hopak-country.mp4) now shows this larger Hopak/country policy, from ground start through landing.
 
 Three nominal physics runs (seeds 7, 1, 13) completed the mission with no drone contact; the lowest separation across them was 1.587 m. The seed-7 run used all four interaction modes for each drone and passed the lead three times. [Recorded decisions and measurements](../reports/choreography-check.json) include source hashes for the checked policy.
 

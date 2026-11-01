@@ -44,11 +44,11 @@ The mission performs staggered takeoff, acquires localization, settles, dances f
 
 ## Simulation and MP4
 
-[Watch/download the existing 40.8-second MP4](media/drone-duet-metal.mp4): ground start → staggered takeoff → dance → return → landing.
+[Watch/download the 44.2-second Hopak/country MP4](media/drone-duet-hopak-country.mp4): ground start → staggered takeoff → larger partner-responsive dance → return → landing.
 
-The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-metal.provenance.json) accompany the clip.
+The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-hopak-country.provenance.json) accompany the clip.
 
-**The existing MP4 shows the earlier four-move policy.** The larger Hopak/country policy has been tested without rendering a replacement video, as requested.
+The MP4 shows the current Hopak/country policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
 
 On Apple Silicon macOS, install the local simulation dependencies:
 
@@ -60,6 +60,9 @@ python -m duet.bootstrap
 
 # Run physics, record decisions and export USD poses without rendering a video.
 python -u -m duet.metal_record --simulate-only --output-dir outputs/duet-check
+
+# Simulate, render and encode a clean MP4 using macOS USD Metal and ffmpeg.
+python -u -m duet.metal_record --output-dir outputs/duet-video
 ```
 
 [MP4 reproduction and provenance](docs/metal-video.md) describe the organizers-based recording pipeline. A separate [original Isaac recorder](docs/organizer-stack.md#original-3d-visualization--mp4) is available for an already configured Linux NVIDIA Isaac host; that backend remains unvalidated here.
@@ -71,7 +74,7 @@ python -m unittest discover -s tests -v
 python -m duet.record --prepare-only
 ```
 
-The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks. All 26 tests pass with those dependencies installed. Three nominal physics runs completed the larger duet without drone contact; their smallest separation was 1.587 m. These checks use simulated sensing and do not replace physical flight validation.
+The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks. All 27 tests pass with those dependencies installed. Three nominal physics runs completed the larger duet without drone contact; their smallest separation was 1.587 m. These checks use simulated sensing and do not replace physical flight validation.
 
 ## Code
 

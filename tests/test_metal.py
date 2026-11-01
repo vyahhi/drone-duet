@@ -11,6 +11,27 @@ READY = all(importlib.util.find_spec(name) is not None for name in ("mujoco", "p
 
 @unittest.skipUnless(READY, "requires requirements-metal.txt")
 class MetalPortTests(unittest.TestCase):
+    def test_optional_telemetry_preserves_clean_frames_and_is_repeatable(self):
+        import cv2
+        import numpy as np
+        from duet.metal_record import telemetry_frames
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "frames").mkdir()
+            original = out / "frames/frame_0.png"
+            cv2.imwrite(str(original), np.full((720, 1280, 3), 170, dtype=np.uint8))
+            clean_bytes = original.read_bytes()
+            report = {"min_separation_m": 1.6, "frames": [{"row": 0, "t": 0, "positions": [(0, 0, 0)] * 2}],
+                      "rows": [{"phase": "ground", "moves": ["lead", "mirror"],
+                                "fix_ages": [None, None], "rc": [(0, 0, 0, 0)] * 2}]}
+            destination = telemetry_frames(out, report) / "frame_0.png"
+            first = destination.read_bytes()
+            telemetry_frames(out, report)
+            self.assertEqual(original.read_bytes(), clean_bytes)
+            self.assertEqual(destination.read_bytes(), first)
+            self.assertEqual(int(cv2.imread(str(destination))[0, 0, 0]), 0)
+            self.assertEqual(int(cv2.imread(str(original))[0, 0, 0]), 170)
+
     def test_rigid_model_preserves_original_urdf_mass_inertia_and_geometry(self):
         from duet.metal_record import rigid_bodies_from_urdf
         from duet.metal_scene import UPSTREAM
@@ -72,8 +93,8 @@ class MetalPortTests(unittest.TestCase):
         self.assertGreater(hopak_height, 0.22)
 
     def test_original_usd_scene_is_usable_and_only_portable_stage_hook_is_patched(self):
-        from duet.metal_scene import create_scene
-        from pxr import UsdGeom
+        from duet.metal_scene import create_scene, visible_tags
+        from pxr import Gf, UsdGeom
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             stage, transforms = create_scene(out)
@@ -86,6 +107,16 @@ class MetalPortTests(unittest.TestCase):
                           and p.GetName() == "Shape"]
                 self.assertEqual(len(shapes), 7)
             self.assertEqual(UsdGeom.GetStageUpAxis(stage), "Z")
+            from action_space_kit.tags.room_map import load_room_tags
+            tags = load_room_tags(1.22)
+            kept = visible_tags(stage, tags)
+            self.assertIn(10, kept)
+            self.assertNotIn(4, kept)  # the partial AprilTag previously poking through the floor
+            for tag_id in kept:
+                mesh = UsdGeom.Mesh(stage.GetPrimAtPath(f"/World/Room/tag_{tag_id}/face"))
+                transform = UsdGeom.XformCache().GetLocalToWorldTransform(mesh.GetPrim())
+                self.assertGreater(min(transform.Transform(Gf.Vec3d(p))[2]
+                                       for p in mesh.GetPointsAttr().Get()), 0)
             patch = (out / "usd-stage-port.patch").read_text()
             self.assertIn("+def spawn_room(stage, root:", patch)
             self.assertNotIn("-def spawn_tag", patch)

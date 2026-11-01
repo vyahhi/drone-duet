@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import shutil
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -20,7 +21,7 @@ import mujoco
 import torch
 from pxr import Gf, Usd
 
-from .metal_scene import COLORS, KIT, create_scene, load_file, original_function
+from .metal_scene import COLORS, KIT, create_scene, load_file, visible_tags
 from .mission import HOMES, Mission, State
 from .upstream import ROOT, UPSTREAM, formation, rc_for_pair
 
@@ -81,7 +82,8 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
     module = formation()
     from action_space_kit.tags.room_map import load_room_tags
 
-    tags = list(load_room_tags(1.22).values())
+    scene_tags = visible_tags(scene, load_room_tags(1.22))
+    tags = list(scene_tags.values())
     tag_pos = torch.tensor(np.asarray([t.pos for t in tags]), dtype=torch.float32)
     tag_normal = torch.tensor(np.asarray([t.normal for t in tags]), dtype=torch.float32)
     tag_size = torch.tensor([t.size_m for t in tags], dtype=torch.float32)
@@ -232,6 +234,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
         report = {"renderer": "Apple Hydra Metal / usdrecord", "physics": "MuJoCo CPU, not Isaac PhysX",
                   "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
                   "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
+                  "sensing_tag_ids": list(scene_tags),
                   "velocity_observation": "ideal simulator velocity; not camera-estimated",
                   "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
                   "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
@@ -254,7 +257,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
         return report
 
 
-def encode(output, report, video):
+def telemetry_frames(output, report):
     # Keep the original recorder's panel drawing; replace its RL reward label with
     # a measured separation metric (this mission does not compute a race reward).
     overlay_path = UPSTREAM / "simulation_infra/scripts/record_room.py"
@@ -267,11 +270,14 @@ def encode(output, report, video):
     exec(compile(source, str(overlay_path), "exec"), namespace)
     overlay = namespace["overlay"]
     colors = [tuple(int(255 * c) for c in reversed(rgb)) for rgb in COLORS]
-    frames = output / "frames"
+    frames = output / "telemetry-frames"
+    frames.mkdir(exist_ok=True)
     for i, frame in enumerate(report["frames"]):
         path = frames / f"frame_{i}.png"
-        if not path.is_file():
-            raise RuntimeError("Missing rendered frame: " + str(path))
+        original = output / "frames" / path.name
+        if not original.is_file():
+            raise RuntimeError("Missing rendered frame: " + str(original))
+        shutil.copy2(original, path)
         row = report["rows"][frame["row"]]
         labels = [row["phase"] + ": " + move for move in row["moves"]]
         if row["phase"] == "dance" and "dancers" in row:
@@ -288,8 +294,14 @@ def encode(output, report, video):
             for k in range(2):
                 rec["drones"][k]["phase"] = "LANDED on spot" if frame["positions"][k][2] < 0.04 else "LANDING"
         overlay(str(path), rec, colors, None)
+    return frames
+
+
+def encode(output, report, video, *, telemetry=False):
+    frames = telemetry_frames(output, report) if telemetry else output / "frames"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(report["fps"]),
-                    "-i", str(frames / "frame_%d.png"), "-c:v", "libx264", "-crf", "18",
+                    "-i", str(frames / "frame_%d.png"), "-frames:v", str(report["frame_count"]),
+                    "-c:v", "libx264", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(video)], check=True)
     subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-f", "null", "-"], check=True)
     print("[metal] MP4:", video, flush=True)
@@ -304,6 +316,7 @@ def main():
     parser.add_argument("--simulate-only", action="store_true")
     parser.add_argument("--render-only", action="store_true")
     parser.add_argument("--encode-only", action="store_true")
+    parser.add_argument("--telemetry", action="store_true", help="Add original recorder diagnostic panels; default is clean 3D")
     args = parser.parse_args()
     if not 1 <= args.fps <= 60:
         parser.error("--fps must be between 1 and 60")
@@ -323,7 +336,8 @@ def main():
         print("[metal] rendering", report["frame_count"], "frames", flush=True)
         with (output / "render.log").open("w") as log:
             subprocess.run(cmd, check=True, stdout=log, stderr=subprocess.STDOUT)
-    encode(output, report, output / "drone-duet.mp4")
+    video = output / ("drone-duet-telemetry.mp4" if args.telemetry else "drone-duet.mp4")
+    encode(output, report, video, telemetry=args.telemetry)
 
 
 if __name__ == "__main__":

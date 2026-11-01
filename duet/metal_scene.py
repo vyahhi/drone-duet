@@ -128,6 +128,30 @@ def import_urdf_visuals(stage, root, path):
             UsdShade.MaterialBindingAPI.Apply(shape.GetPrim()).Bind(mat)
 
 
+def suppress_floor_intersections(stage, tags):
+    """Omit invalid near-floor mapped prints, rather than show clipped fragments.
+
+    Source poses are untouched. The local sensor uses the same visible subset.
+    """
+    cache = UsdGeom.XformCache()
+    hidden = []
+    for tag_id in tags:
+        root = f"/World/Room/tag_{tag_id}"
+        mesh = UsdGeom.Mesh(stage.GetPrimAtPath(root + "/face"))
+        transform = cache.GetLocalToWorldTransform(mesh.GetPrim())
+        bottom = min(transform.Transform(Gf.Vec3d(p))[2] for p in mesh.GetPointsAttr().Get())
+        if bottom <= 0:
+            UsdGeom.Imageable(stage.GetPrimAtPath(root)).MakeInvisible()
+            hidden.append(tag_id)
+    return hidden
+
+
+def visible_tags(stage, tags):
+    return {tag_id: tag for tag_id, tag in tags.items()
+            if UsdGeom.Imageable(stage.GetPrimAtPath(f"/World/Room/tag_{tag_id}")).ComputeVisibility()
+            != UsdGeom.Tokens.invisible}
+
+
 def create_scene(output, width=1280, height=720, fps=24):
     output.mkdir(parents=True, exist_ok=True)
     room, spawn = load_portable_sources(output)
@@ -148,6 +172,7 @@ def create_scene(output, width=1280, height=720, fps=24):
     walls = namespace["_room_walls"](types.SimpleNamespace(cfg=cfg))
     tags = room.load_room_tags(tag10_height=1.22)
     spawn.spawn_room(stage, "/World/Room", tags, walls)
+    hidden_tags = suppress_floor_intersections(stage, tags)
     # Storm/Metal rejects one-channel sRGB textures. Preserve the original tag pixels
     # exactly while repeating grayscale into RGB, which the renderer can sample.
     import cv2
@@ -188,6 +213,9 @@ def create_scene(output, width=1280, height=720, fps=24):
         "organizer_repository": "https://github.com/jaromero3rd/Action_Space", "revision": REVISION,
         "original_scene_functions": ["spawn_room", "spawn_tag", "spawn_wall", "_preview_material", "_room_walls", "setup_camera"],
         "scene_port": "Explicit USD stage parameter; duet camera framing; grayscale tags expanded losslessly to RGB for Metal; local lighting",
+        "floor_tag_cleanup": {"suppressed_tag_ids": hidden_tags,
+                              "reason": "mapped printed face intersects or lies below Z=0 floor",
+                              "sensing": "same visible subset; original map file and remaining poses unchanged"},
         "drone_geometry": "literal primitives, offsets and materials from original tello.urdf; no custom drone model",
         "renderer": "/usr/bin/usdrecord --renderer Metal (Apple Hydra), not NVIDIA RTX",
         "source_sha256": {str(p.relative_to(UPSTREAM)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
