@@ -1,6 +1,10 @@
-# Drone Duet
+# Drone Duet — Classical Ballet vs. Krump
 
 Autonomous choreography for two Ryze Tello EDU drones, built on the Sundai organizers’ [Action_Space](https://github.com/jaromero3rd/Action_Space) flight and simulation stack.
+
+[**Watch the 44-second duet with music**](media/drone-duet-ballet-krump.mp4) · [Video provenance](media/drone-duet-ballet-krump.provenance.json) · [Measured validation](reports/choreography-check.json)
+
+The MP4 follows both drones from resting on their pads through staggered takeoff, 28 seconds of dancing, role exchanges, return and landing. It uses the organizers’ room-building code, Tello model and controller, with **MuJoCo physics and Apple Metal rendering**. The frames show integrated rigid-body motion. Physical flight remains untested.
 
 The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators.
 
@@ -11,11 +15,20 @@ The Python controller runs on a **shared Linux flight computer** and sends takeo
 | Ari, orange pad | Classical Ballet | Sustained adagio arcs, elevated arabesques, sweeping port de bras |
 | Sol, cyan pad | Krump | Low stomps, forceful traveling jabs, chest-pop accents and deliberate stops |
 
-Style persists through every response: Ballet smooths the partner’s movement into elevated curves; Krump quantizes it into low accents with RC braking holds.
+Style persists through every response. Ballet smooths and elevates the partner’s movement into continuous curves. Krump amplifies horizontal movement into stepped accents, stays low, and sends zero RC for 0.65 seconds every two seconds to brake into a hold. These are whole-drone interpretations of human dance styles.
 
-Each dancer can **lead, mirror observed motion, echo it after a delay, or answer a recorded phrase in its own style**. They trade the lead after sustained measured engagement, and the leader slows when the partner lags. Choices depend on motion observations and move history. This is feedback-driven, rule-based autonomy; no LFM inference is implemented.
+| Interaction | What the dancer does |
+| --- | --- |
+| Lead | Chooses a phrase from its own vocabulary using partner motion and move history |
+| Mirror | Reflects the partner’s measured movement, interpreted in its own style |
+| Echo | Responds to the partner’s measured movement from 1.2 seconds earlier |
+| Reply | Captures a three-second partner motif and transforms it into a four-second answer |
 
-Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Command smoothing and firmware response reduce actual motion. In the nominal seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stays **35 cm higher on average**, while Krump brakes into repeated holds. See [policy details](docs/choreography.md) and [recorded validation](reports/choreography-check.json).
+They trade the lead after sustained measured engagement, and the leader slows when the partner lags. This is feedback-driven, rule-based autonomy; no LFM inference is implemented. Both policies share state on the flight computer. The drones infer partner motion through their room-relative position estimates; they do not visually recognize each other or communicate directly.
+
+Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the nominal seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stayed **35 cm higher on average**; Krump’s mean speed dropped **70% across its braking holds**. See [policy details](docs/choreography.md) for measured motion and interaction rules.
+
+Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The video uses an excerpt with loudness adjustment and fades. Music is added during encoding and does not drive or synchronize flight. [Full attribution and edit details](media/music/README.md).
 
 ## Run with real drones
 
@@ -46,13 +59,11 @@ The mission performs staggered takeoff, acquires localization, settles, dances f
 
 ## Simulation and MP4
 
-[Watch/download the 44.3-second Ballet/Krump MP4](media/drone-duet-ballet-krump.mp4): ground start → staggered takeoff → larger partner-responsive dance → return → landing.
-
-The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-ballet-krump.provenance.json) accompany the clip.
+The local pipeline executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. It runs on Apple Silicon without an NVIDIA GPU, using **MuJoCo CPU physics + Apple Hydra Metal rendering**. This is a local port of the organizer stack; the recording is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-ballet-krump.provenance.json) accompany the clip.
 
 The MP4 shows the current Ballet/Krump policy, including mirrored responses, delayed echoes, replies and three leadership handoffs. It is clean 3D output without telemetry panels; measurements and decisions accompany it in the provenance report. Mapped tags that intersect the floor are suppressed in both local rendering and simulated sensing, rather than appearing as clipped fragments.
 
-On Apple Silicon macOS, install the local simulation dependencies:
+Requires Apple Silicon macOS with `/usr/bin/usdrecord` supporting Metal, Python 3.11, Git, and ffmpeg/ffprobe on PATH:
 
 ```sh
 python3.11 -m venv .venv-metal
@@ -65,11 +76,14 @@ python -u -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 
 # Simulate, render and encode a clean MP4 using macOS USD Metal and ffmpeg.
 python -u -m duet.metal_record --music --output-dir outputs/duet-video
+
+# Re-encode existing frames with music, without rerunning physics or rendering.
+python -u -m duet.metal_record --encode-only --music --output-dir outputs/duet-video
 ```
 
-[MP4 reproduction and provenance](docs/metal-video.md) describe the organizers-based recording pipeline. A separate [original Isaac recorder](docs/organizer-stack.md#original-3d-visualization--mp4) is available for an already configured Linux NVIDIA Isaac host; that backend remains unvalidated here.
+The output directory contains `drone-duet.mp4`, USD poses, rendered frames, simulation decisions and encoding provenance. Omit `--music` for a silent video; use `--music-start SECONDS` to choose another excerpt from the bundled track. The checked MP4 is kept in `media/`; generated working files stay in ignored `outputs/`.
 
-Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The excerpt has loudness adjustment and fades; it does not drive the flight policy. [Music credit and edit details](media/music/README.md).
+[MP4 reproduction and provenance](docs/metal-video.md) describe the organizers-based recording pipeline. A separate [original Isaac recorder](docs/organizer-stack.md#original-3d-visualization--mp4) is available for an already configured Linux NVIDIA Isaac host; that backend remains unvalidated here.
 
 ## Verification
 
@@ -78,7 +92,7 @@ python -m unittest discover -s tests -v
 python -m duet.record --prepare-only
 ```
 
-The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks. All 27 tests pass with those dependencies installed. Three nominal physics runs completed the larger duet without drone contact; their smallest separation was 1.587 m. These checks use simulated sensing and do not replace physical flight validation.
+The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks; ffmpeg/ffprobe enable the music-encoding check. **All 29 tests pass locally, and both GitHub CI jobs pass.** The checks cover style contrast in actual simulated motion, measured-motion responses, braking holds, takeoff/landing, flight guards, audio encoding and credits. Three nominal physics runs completed without drone contact; their smallest separation was **1.502 m**. These checks use simulated sensing and do not replace physical flight validation.
 
 ## Code
 
@@ -97,4 +111,4 @@ The flight environment runs policy, hardware-adapter and recorder-preparation ch
 
 Organizer source is fetched into ignored `vendor/action-space`, pinned to commit `cd6536a458c3ba034a727ea00f57adac6bed9471`, and checked for modifications before use. The original [drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks) kit links to this fuller multi-drone stack.
 
-Our code is MIT. Organizer code, external runtimes and Tello assets and music retain their own terms; see [third-party credits](media/THIRD_PARTY.md).
+Our code is MIT. Organizer code, external runtimes, Tello assets and music retain their own terms; see [third-party credits](media/THIRD_PARTY.md).
