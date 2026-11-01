@@ -41,7 +41,7 @@ python3 -m duet.bootstrap
 python3 -m duet.record --prepare-only
 ```
 
-The NVIDIA/Omniverse MP4 path remains unavailable on this Mac. The user approved using the organizers’ scene/code with a local renderer, and the separate [Metal/MuJoCo video](metal-video.md) has now been rendered, decoded and visually inspected. It is not a browser capture or a claim that NVIDIA Isaac Sim runs on macOS.
+The NVIDIA/Omniverse MP4 path remains unavailable on this Mac. The user approved using the organizers’ scene/code with a local renderer, and the [Metal/MuJoCo video](metal-video.md) has been rendered, decoded and visually inspected. NVIDIA Isaac Sim does not run on this macOS host.
 
 ## Physical two-Tello duet
 
@@ -94,7 +94,6 @@ Landing is an attempted SDK action, not a guarantee on a disconnected radio. An 
 
 ```sh
 python -m unittest discover -s tests -v
-npm test
 ```
 
 Python tests cover deterministic partner replies, target bounds and slew limits across seeds, stale tracking, telemetry failures, prediction-based stopping, coordinate transforms, original-controller RC output, a simple kinematic closed-loop integration, calibration identity checks, watchdog behavior and original recorder patch/provenance generation. The kinematic test is not Isaac or a drone flight test.

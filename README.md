@@ -1,119 +1,93 @@
 # Drone Duet
 
-**Two independent minds. One shared rhythm.**
+Autonomous choreography for two Ryze Tello EDU drones, built on the Sundai organizers’ [Action_Space](https://github.com/jaromero3rd/Action_Space) flight and simulation stack.
 
-A live experiment in autonomous choreography, built for Sundai’s drone hack at Harvard i-labs, November 1, 2026. The browser demo shows two Tello-inspired virtual drones improvising a duet.
+The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators.
 
-The project now also includes a **two-Tello flight adapter** and an **Isaac MP4 recorder using the organizers’ original simulation code**. Organizer approval for two drones flying has been granted. The flight/Isaac controller uses a separate, smaller, lane-bounded dance suited to tag tracking; it does not send the browser’s large trajectories to hardware.
+## The duet
 
-**Current drone policy:** [Ari's Hopak-inspired style and Sol's country line dance](docs/choreography.md), with substantially larger travel, measured-motion mirroring, delayed echoes, recorded-motif replies, adaptive pacing and leadership handoffs. This is shared by the hardware adapter and simulators. It uses feedback-driven rules, not LFM. The new behavior is tested without rendering a new video, as requested.
+| Dancer | Human dance inspiration | Movement vocabulary |
+| --- | --- | --- |
+| Ari, orange pad | Hopak | Rising hop accents, squat-like dips, broad sweeps |
+| Sol, cyan pad | Country line dance | Two-step travel, side shuffles, box steps, bows |
 
-**Earlier video:** [40.8-second drone duet MP4](media/drone-duet-metal.mp4), from ground start through staggered takeoff, dance, return and landing, rendered locally from the organizers’ actual USD room-building code and original Tello URDF. It shows the previous four-move policy. As approved for this Mac, the backend is **MuJoCo physics + Apple Hydra Metal**, rather than NVIDIA PhysX/RTX. See [render instructions and provenance](docs/metal-video.md).
+Each dancer can **lead, mirror observed motion, echo it after a delay, or answer a recorded phrase in its own style**. They trade the lead after sustained measured engagement, and the leader slows when the partner lags. Choices depend on motion observations and move history. This is feedback-driven, rule-based autonomy; no LFM inference is implemented.
 
-**Validation status:** browser and Python mission/controller tests pass, including local rigid-body/scene checks. The experimental community IsaacLab-MLX port also runs on this Mac’s M4 GPU; its original quadcopter example and 34 runtime/quadcopter tests pass. Physical flight and the NVIDIA Isaac Sim backend remain unvalidated.
+Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Command smoothing and firmware response reduce actual motion. In the nominal seed-7 physics run, the drones traveled **0.76 m and 0.87 m forward/back**, with **0.28 m of Hopak height travel**. See [policy details](docs/choreography.md) and [recorded validation](reports/choreography-check.json).
 
-See [Apple Silicon installation and verified limits](docs/isaac-apple.md).
+## Run with real drones
 
-See [physical flight and original-renderer instructions](docs/organizer-stack.md). Prepare the organizers’ pinned recorder locally with:
-
-```sh
-python3 -m duet.bootstrap
-python3 -m duet.record --prepare-only
-```
-
-The browser demo below runs on a Mac or other laptop with WebGL2; it does not require Isaac or drone hardware.
-
-## Run
-
-Requires Node.js 22.12+ (or a current Node 24 LTS release).
+Requires Python 3.11, Git, the organizers’ Linux networking setup, two USB Wi-Fi adapters, and the actual fleet’s room map and camera calibrations.
 
 ```sh
-npm ci
-npm run dev
+python3.11 -m venv .venv-flight
+source .venv-flight/bin/activate
+python -m pip install -r requirements-flight.txt
+python -m duet.bootstrap
 ```
 
-Open **http://127.0.0.1:5173**. The duet starts automatically. Enable sound to hear the original procedural score. Drag the scene to orbit, scroll to zoom, switch to top/front view, or enter fullscreen. Space pauses/resumes. The reset button starts a new seeded session. Export saves the decision history and session metrics as JSON.
+Use a deployment configuration directory containing the current `dongles.json`, `map.yaml`, `tags.yaml`, and matching `camera/tello_<id>.yaml` calibrations. The adapter checks each selected drone’s calibration SSID. Mark pads 2.5 m in front of tag 10 and 0.8 m to each side, with both cameras facing the tag. Supply the measured tag-center height using `--tag-height` if it differs from 1.22 m.
 
-The circular record button captures up to 60 seconds of the 3D canvas as a downloadable WebM (or MP4 where supported). Click again to save sooner. This captures the rendered scene without the HTML overlays or audio.
-
-For a production build:
+The IDs below are examples; replace them with the two configured drones in negative-Y, positive-Y lane order.
 
 ```sh
-npm run build
-npm start
+# Read-only preflight; sends no takeoff, RC or landing commands.
+python -u -m duet.fly --only 4,8 --config-dir /absolute/path/to/current/config
+
+# Enable physical flight at the cleared flight space.
+python -u -m duet.fly --only 4,8 --config-dir /absolute/path/to/current/config --fly
 ```
 
-The server binds to loopback by default. Set `PORT` or `HOST` explicitly if needed. The UI uses optional Google Fonts with system fallbacks; the simulation and synthesized soundtrack need no external service.
+The mission performs staggered takeoff, acquires localization, settles, dances for 28 seconds, returns home and lands. It monitors localization freshness, predicted separation, flight envelope, battery, status and loop stalls. Logs include measured positions, targets, RC commands, dancer styles, response choices and role handoffs.
 
-## What is autonomous?
+**Physical flight remains untested.** Organizer approval for two drones flying has been granted; simulation does not establish hardware reliability. See [deployment instructions and implemented guards](docs/organizer-stack.md) before using the flight adapter.
 
-Each dancer observes the other’s current movement, position, and velocity, plus the shared musical beat and energy. They choose from six designed motion primitives: **orbit, mirror, weave, ripple, spiral, solo**.
+## Simulation and MP4
 
-- **Ari, the explorer**, puts more weight on novel moves.
-- **Sol, the connector**, puts more weight on complementary replies.
-- Each makes an independent decision every eight beats; their decision times are staggered by four beats.
-- The default policy scores novelty, partner response, musical energy, variation, and seeded randomness. The order of moves is generated during the session, not scripted.
-- The visible conversation displays the actual decisions and their intentions. Local intentions are templated explanations of the selected action; they are not language-model reasoning.
+[Watch/download the existing 40.8-second MP4](media/drone-duet-metal.mp4): ground start → staggered takeoff → dance → return → landing.
 
-This is high-level autonomous choreography over designed motion primitives. It is **not** a trained flight policy, a physics-accurate Tello digital twin, or a claim of emergent learning. Agents adapt their choices to one another during a session but do not update model weights.
+The video executes the organizers’ USD room-building code, original Tello model, firmware/rotor controller and tag-visibility model. The approved local backend is **MuJoCo physics + Apple Hydra Metal rendering**. It is not NVIDIA Isaac PhysX/RTX output. [Source hashes, metrics and video provenance](media/drone-duet-metal.provenance.json) accompany the clip.
 
-## Optional LFM3 choreography
+**The existing MP4 shows the earlier four-move policy.** The larger Hopak/country policy has been tested without rendering a replacement video, as requested.
 
-This optional adapter applies to the browser demo. The Python drone mission uses the [partner-responsive policy](docs/choreography.md), with no LFM inference. It coordinates through a shared computer using each drone's room-tag position estimate; the drones do not visually recognize one another or exchange direct drone-to-drone messages.
+On Apple Silicon macOS, install the local simulation dependencies:
 
-The application also has a real server-side inference adapter for **LFM3-1.7B** or another model served through an OpenAI-compatible `/chat/completions` endpoint. A text model is sufficient because it receives structured observations from the simulation. No screenshot or vision model is needed for this version.
+```sh
+python3.11 -m venv .venv-metal
+source .venv-metal/bin/activate
+python -m pip install -r requirements-metal.txt
+python -m duet.bootstrap
 
-1. Download/load LFM3 in a compatible local inference runtime (for example, a current LM Studio version that supports the model), and start its model server.
-2. Copy `.env.example` to `.env`.
-3. Set `DUET_MODEL_BASE_URL` to your endpoint’s API base and `DUET_MODEL_NAME` to the **exact model identifier** exposed by that server. Add `DUET_MODEL_API_KEY` only if required.
-4. Restart this application, click **Local autonomy** in the footer, and choose **Use configured model**.
-
-Example configuration:
-
-```dotenv
-DUET_MODEL_BASE_URL=http://127.0.0.1:1234/v1
-DUET_MODEL_NAME=LFM3-1.7B
+# Run physics, record decisions and export USD poses without rendering a video.
+python -u -m duet.metal_record --simulate-only --output-dir outputs/duet-check
 ```
 
-Each agent sends its own observation and receives a JSON move and short intention. Requests time out after 10 seconds; responses more than eight simulation beats old are rejected. Invalid/failed decisions fall back to the local policy, explicitly labeled **LOCAL FALLBACK**. While waiting, the previous phrase continues. For smooth model-driven choreography, use an endpoint that responds within a phrase (roughly 4–7 seconds depending on the track).
+[MP4 reproduction and provenance](docs/metal-video.md) describe the organizers-based recording pipeline. A separate [original Isaac recorder](docs/organizer-stack.md#original-3d-visualization--mp4) is available for an already configured Linux NVIDIA Isaac host; that backend remains unvalidated here.
 
-API keys remain in the Node server and are never included in the browser bundle. `.env` is ignored by Git. The endpoint is configured only on the server; browser requests cannot choose an arbitrary upstream URL. Enabling a remote endpoint sends only the simulated dance state to that endpoint. LFM3 is **optional and not bundled**; the default demo uses local policies, not a hidden or simulated model connection. Model weights retain their own licenses.
+## Verification
 
-## Movement and metrics
+```sh
+python -m unittest discover -s tests -v
+python -m duet.record --prepare-only
+```
 
-The fixed 60 Hz simulation uses damped acceleration toward continuously moving phrase targets. Speed and acceleration are limited. Predictive repulsion and a hard minimum-distance projection keep the virtual drones at least **1.35 m** apart. This is a visualization constraint, not a certified physical safety controller.
+The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks. All 26 tests pass with those dependencies installed. Three nominal physics runs completed the larger duet without drone contact; their smallest separation was 1.587 m. These checks use simulated sensing and do not replace physical flight validation.
 
-- **Rhythm affinity:** Pearson correlation between the dancers’ speed magnitudes over up to 480 simulation ticks (8 seconds), mapped from `[-1, 1]` to `[0, 100]`. It measures motion similarity, not artistic quality or beat-tracking accuracy.
-- **Partner distance:** current 3D distance between centers.
-- **Creative vocabulary:** number of distinct primitives selected by either agent.
-- **Decisions made:** total applied phrase choices, excluding their initial moves.
+## Code
 
-The three tracks are original synthesized loops, with different tempos and energy profiles. A shared beat clock drives the simulation. Audio is scheduled in Web Audio when enabled; browser scheduling latency means this is not a sample-accurate audio/visual synchronization system. Hidden tabs suspend the simulation and sound; returning resumes without catching up elapsed wall time.
-
-## Architecture
-
-| File | Responsibility |
+| Path | Purpose |
 | --- | --- |
-| `src/engine.js` | Independent agents, observations, move scoring, motion controller, separation guard, metrics |
-| `src/scene.js` | Three.js Tello-inspired models, lit stage, shadows, camera controls, trails, labels |
-| `src/audio.js` | Original procedural score via Web Audio |
-| `src/main.js` | Controls, telemetry, decision log, inference integration, session export |
-| `server.mjs` | Vite development / production static server, private inference proxy |
-| `test/engine.test.js` | Partner response, reproducibility, separation, bounded motion, action validation |
-| `test/server.test.js` | Production serving, inference protocol, invalid-output handling, credential isolation |
+| `duet/choreography.py` | Dance styles, measured-motion responses, memory and role handoffs |
+| `duet/mission.py` | Mission phases, target smoothing and pair guards |
+| `duet/fly.py` | Linux two-drone deployment, telemetry, watchdog and flight logs |
+| `duet/upstream.py`, `duet/bootstrap.py` | Pinned organizer source and coordinate/RC adapter |
+| `duet/metal_scene.py`, `duet/metal_record.py` | Original scene/model conversion, local physics checks and MP4 generation |
+| `duet/isaac_pilot.py`, `duet/record.py` | Original organizer Isaac recorder integration |
+| `tests/` | Policy, deployment, controller, scene and physics tests |
+| `media/`, `reports/` | Existing MP4, provenance and measured validation results |
 
-```sh
-npm test
-```
+## Organizer sources and license
 
-Tests simulate three tracks across multiple seeds, checking separation and finite/bounded motion at every tick, plus independent decisions and deterministic replay. Browser validation is needed in addition to the engine tests to check WebGL and interaction.
+Organizer source is fetched into ignored `vendor/action-space`, pinned to commit `cd6536a458c3ba034a727ea00f57adac6bed9471`, and checked for modifications before use. The original [drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks) kit links to this fuller multi-drone stack.
 
-## Relationship to the event toolkit
-
-The browser scene is independently implemented. The Python adapter uses the organizers’ full [Action_Space](https://github.com/jaromero3rd/Action_Space) repository at `cd6536a458c3ba034a727ea00f57adac6bed9471`, which contains the multi-drone infrastructure omitted from the smaller [drone-race-hacks](https://github.com/jaromero3rd/drone-race-hacks) kit.
-
-`duet/fly.py --fly` can send physical takeoff, RC and landing commands through the organizers’ Linux multi-dongle stack. Default mode only performs preflight. `duet/record.py` runs the original Isaac room recorder with audited policy/configuration hooks, retaining its Tello assets, physics, viewport capture and ffmpeg encoder. Source hashes and a patch accompany each prepared recording. The third-party checkout is fetched separately and is not redistributed or relicensed here.
-
-## License
-
-Our code is MIT. Browser drone geometry and soundtrack are original procedural assets. Three.js and Vite retain their respective licenses. Organizer code and Tello assets are separate dependencies under their own terms; see [provenance](docs/organizer-stack.md).
+Our code is MIT. Organizer code, external runtimes and Tello assets retain their own terms; see [third-party credits](media/THIRD_PARTY.md).

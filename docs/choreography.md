@@ -1,6 +1,6 @@
 # Partner-responsive drone duet
 
-The same `duet/mission.py` / `duet/choreography.py` policy runs in the hardware adapter, the original Isaac recorder hooks, and the local Metal/MuJoCo simulator. The webapp is a separate prototype and does not control this mission.
+The same `duet/mission.py` / `duet/choreography.py` policy runs in the hardware adapter, the original Isaac recorder hooks, and the local Metal/MuJoCo simulator.
 
 ## Two styles
 
@@ -39,8 +39,8 @@ Flight JSONL, Isaac pilot logs and local simulation JSON now include each dancer
 ## Validation without video rendering
 
 ```sh
-.venv-isaac-mlx/bin/python -m unittest discover -s tests -v
-.venv-isaac-mlx/bin/python -m duet.metal_record --simulate-only --output-dir outputs/reactive-duet-check
+python -m unittest discover -s tests -v
+python -m duet.metal_record --simulate-only --output-dir outputs/reactive-duet-check
 ```
 
 The tests check causal mirroring, delayed echo, captured-motif replies, distinct styles, feedback-dependent handoffs, adaptive pacing, stale-fix freezing, bounded trajectories, controller integration and complete takeoff-to-landing rigid-body simulation. They also require at least 65 cm of actual X travel per drone and 22 cm of Hopak height travel in the nominal seed-7 run, so increasing only target values cannot pass the amplitude check. The new code has not been rendered into a video; the shipped MP4 still shows the earlier four-move policy.

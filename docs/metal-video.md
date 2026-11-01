@@ -2,7 +2,7 @@
 
 [Watch/download the duet](../media/drone-duet-metal.mp4).
 
-The user approved using the organizers’ scene/code with a local renderer after NVIDIA Isaac Sim proved incompatible with this Apple M4 Mac. This video is rendered by macOS’s built-in `/usr/bin/usdrecord --renderer Metal`, using Apple’s Hydra/Storm USD renderer. It is not the independent Three.js browser demo and is not claimed to be NVIDIA RTX output.
+The user approved using the organizers’ scene/code with a local renderer after NVIDIA Isaac Sim proved incompatible with this Apple M4 Mac. This video is rendered by macOS’s built-in `/usr/bin/usdrecord --renderer Metal`, using Apple’s Hydra/Storm USD renderer. It is not claimed to be NVIDIA RTX output.
 
 ## Result
 
@@ -25,7 +25,7 @@ All organizer sources are pinned to `jaromero3rd/Action_Space` commit `cd6536a45
 
 Our code supplies the autonomous mission, source-loading/portability layer, literal URDF-to-USD/MuJoCo conversion, trajectory export, and video orchestration. The local physics backend is **MuJoCo CPU**, rather than Isaac PhysX; rendered poses come from the simulated rigid bodies, not direct animation of target coordinates. All two-drone physics runs in one world with contacts enabled. The camera sphere’s negligible fixed-link mass is omitted; the original base inertia/mass/collision box is retained. Walls are visual; the mission’s measured flight envelope guards room limits.
 
-The new lane-bounded mission is a smaller physical-flight design than the browser’s large paths. It uses seeded procedural choices and measured partner response, not LFM3 or trained-policy weights. Hardware safety and transfer have not been established by this video.
+The lane-bounded mission uses seeded procedural choices and measured partner response, not LFM3 or trained-policy weights. Hardware safety and transfer have not been established by this video.
 
 ## Dance selection and coordination
 
@@ -35,7 +35,7 @@ The new lane-bounded mission is a smaller physical-flight design than the browse
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 
-The separate browser demo has an optional OpenAI-compatible model endpoint adapter. That adapter is not connected to this Python mission; LFM-driven selection for this video or physical duet remains unimplemented.
+LFM-driven selection for the physical duet remains unimplemented.
 
 ## Reproduce
 
@@ -49,7 +49,7 @@ python -m duet.bootstrap
 python -u -m duet.metal_record --output-dir "$PWD/outputs/metal-duet"
 ```
 
-On the already configured local Mac, use `.venv-isaac-mlx/bin/python` instead. No Isaac/Omniverse package is required for this rendering path.
+No Isaac/Omniverse package is required for this rendering path.
 
 The command generates `duet.usda`, `simulation.json` (actual frames, RC, tag fixes, mission decisions and contact checks), `provenance.json`, `usd-stage-port.patch`, PNG frames, `render.log`, and `drone-duet.mp4` in the output directory. For Apple USD Tools 0.24.3, numeric frame placeholders produce unpadded filenames; encoding uses `frame_%d.png`.
 
