@@ -91,6 +91,8 @@ def calibration_check(directory, numbers, config):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    from .ollama_agent import add_arguments, from_arguments
+    add_arguments(parser)
     parser.add_argument("--only", required=True, help="Two drone IDs in lane order: negative Y, positive Y; e.g. 4,8")
     parser.add_argument("--config-dir", type=Path, default=UPSTREAM / "drone_deployment_infra/config")
     parser.add_argument("--tag-height", type=float, default=1.22, help="Measured tag-10 center height above floor, m")
@@ -120,12 +122,16 @@ def main():
         parser.error("Duet requires a shared map with origin_tag 10")
     drones = []
     watchdog = None
+    planner = None
     stop = threading.Event()
     previous = {}
     signal.signal(signal.SIGINT, lambda *_: stop.set())
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     args.log.parent.mkdir(parents=True, exist_ok=True)
     try:
+        # Exact-model verification and prompt warmup happen before takeoff.
+        planner = from_arguments(args)
+        mission.choreography.planner = planner
         drones = module.load_drones(str(config_path), numbers, str(directory / "camera"),
                                     args.fly, tag_map, sizes, module.MapCheck(tag_map))
         drones.sort(key=lambda d: ordered_numbers.index(d.num))
@@ -177,7 +183,8 @@ def main():
         logged_events = 0
         with args.log.open("w") as log:
             log.write(json.dumps({"event": "start", "lane_ids": [d.num for d in drones],
-                                  "tag_height": args.tag_height, "seed": args.seed}) + "\n")
+                                  "tag_height": args.tag_height, "seed": args.seed,
+                                  "phrase_planner": planner.metadata if planner else None}) + "\n")
             while not stop.is_set() and not watchdog.tripped.is_set():
                 tick, now = time.monotonic(), time.time()
                 watchdog.tick()
@@ -208,6 +215,8 @@ def main():
         raise RuntimeError("Operator stop or watchdog")
     finally:
         stop.set()
+        if planner:
+            planner.close()
         if args.fly:
             land_pair(module, drones, "duet shutdown")
             # Keep watchdog active through landing; never close the link before attempts finish.

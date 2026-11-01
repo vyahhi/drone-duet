@@ -26,7 +26,7 @@ The follower reconsiders after four seconds, or after three seconds when a susta
 
  Scores combine style preferences, partner speed, available history, novelty and seeded tie breaking. Ari starts. A shared coordinator permits a leadership handoff after at least seven seconds and measured follower speed above 1.2 cm/s for 0.8 s. A stationary follower does not cause a timed handoff.
 
-This is feedback-driven, rule-based autonomy. LFM, learning and music-driven control are unimplemented. The soundtrack is added during MP4 encoding and does not affect the mission.
+Reactive rules are the default and fallback. Optional [LFM3 agents](lfm3.md) select bounded high-level phrases and tempo adjustments through local Ollama; Python retains styles, motion generation, handoffs and flight guards. Learning and music-driven control are unimplemented. The soundtrack is added during MP4 encoding and does not affect the mission.
 
 ## Localization and limits
 

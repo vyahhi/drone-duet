@@ -43,7 +43,7 @@ The current controller additionally uses debounced movement cues to trigger earl
 
 Both dancer policies run in one computer process and share move/state information. The hardware adapter receives each drone's camera stream, uses the organizers' AprilTag tracker to estimate its position in the shared room map, and sends RC commands over separate Wi-Fi interfaces. It infers partner position from the two room-relative estimates. The drones do not visually detect each other or communicate directly. In this nominal video, tag visibility and 150 ms delay use the original geometric sensor model, with ideal velocity/yaw and no pixel-detection pipeline or random missed detections.
 
-LFM-driven selection for the physical duet remains unimplemented.
+Optional [local LFM3 phrase agents](lfm3.md) are now wired into the local recorder and Linux flight adapter. They have a separate inference/physics validation report; the existing MP4 contains no LFM inference. Physical flight remains untested.
 
 ## Reproduce
 

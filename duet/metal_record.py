@@ -71,7 +71,7 @@ def takeoff_rc(t, positions, vertical_gain):
     return commands, armed
 
 
-def simulate(output, *, seed=7, fps=24, dance_seconds=28):
+def simulate(output, *, seed=7, fps=24, dance_seconds=28, planner=None):
     start_wall = time.monotonic()
     torch.set_num_threads(1)
     torch.manual_seed(seed)
@@ -90,7 +90,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
     sensor = sensing.TagSensorCfg(video_delay_steps=3)
     # Deterministic nominal visualization: geometric visibility and a 150 ms video
     # delay remain enabled. Pixel noise and random missed detections are disabled.
-    mission = Mission(seed, dance_seconds)
+    mission = Mission(seed, dance_seconds, planner=planner)
     physics_dt, command_steps = 0.002, 25
     cfg = dynamics.TelloDynamicsCfg(domain_randomization=False)
     fit = rc_module.load_motion_fit()
@@ -119,6 +119,7 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
         motors_stopped = [False, False]
         phase = "ground"
         tick = 0
+        flight_wall = time.monotonic()
         while tick < 60 / physics_dt:
             t = tick * physics_dt
             positions, quats, vworld, wbody, vbody = [], [], [], [], []
@@ -147,6 +148,10 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                 contacts = True
                 raise RuntimeError("Drone-to-drone contact")
             if tick % command_steps == 0:
+                if planner:
+                    # Live model deadlines must see real flight time, rather than
+                    # a 45-second episode compressed into a few wall seconds.
+                    time.sleep(max(0, flight_wall + t - time.monotonic()))
                 rotation = dynamics._quat_to_rot(q_t)
                 camera_rotation = sensing.camera_axes(rotation, sensor.camera_pitch)
                 offset = torch.einsum("nij,j->ni", rotation, torch.tensor(sensor.camera_offset))
@@ -240,7 +245,9 @@ def simulate(output, *, seed=7, fps=24, dance_seconds=28):
                   "start": "resting on pads, motors off; 1.5 s ground hold then staggered powered takeoff",
                   "takeoff_model": "altitude-based SDK approximation, original firmware/rotor forces; ideal onboard altitude",
                   "takeoff_complete_s": mission_at, "physical_flight_tested": False,
-                  "choreography": "Classical Ballet vs Krump: style-preserving measured replies, independent pacing and RC holds; no LFM",
+                  "choreography": "Classical Ballet vs Krump: measured replies, dynamic timing, RC holds" +
+                                  ("; local Ollama phrase agents" if planner else "; reactive rules"),
+                  "phrase_planner": planner.metadata if planner else None,
                   "fps": fps, "frame_count": len(frames), "duration_s": len(frames) / fps,
                   "dance_seconds": dance_seconds, "seed": seed, "min_separation_m": min_gap,
                   "max_tilt_deg": max_tilt, "drone_contacts": contacts, "completed": True,
@@ -335,6 +342,8 @@ def encode(output, report, video, *, telemetry=False, music=False, music_start=3
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    from .ollama_agent import add_arguments, from_arguments
+    add_arguments(parser)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs/metal-duet")
     parser.add_argument("--fps", type=int, default=24)
     parser.add_argument("--seed", type=int, default=7)
@@ -350,9 +359,16 @@ def main():
         parser.error("--fps must be between 1 and 60")
     output = args.output_dir.resolve()
     if args.render_only or args.encode_only:
+        if args.llm_model:
+            parser.error("--llm-model is for new simulations; existing frames retain their recorded policy")
         report = json.loads((output / "simulation.json").read_text())
     else:
-        report = simulate(output, seed=args.seed, fps=args.fps, dance_seconds=args.dance_seconds)
+        planner = from_arguments(args)
+        try:
+            report = simulate(output, seed=args.seed, fps=args.fps, dance_seconds=args.dance_seconds, planner=planner)
+        finally:
+            if planner:
+                planner.close()
     if args.simulate_only:
         return
     frames = output / "frames"

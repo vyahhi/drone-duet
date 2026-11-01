@@ -6,9 +6,9 @@ Autonomous choreography for two Ryze Tello EDU drones, built on the Sundai organ
 
 The MP4 follows both drones from resting on their pads through staggered takeoff, 28 seconds of dancing, role exchanges, return and landing. It uses the organizers’ room-building code, Tello model and controller, with **MuJoCo physics and Apple Metal rendering**. The frames show integrated rigid-body motion. Physical flight remains untested.
 
-The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators.
+The Python controller runs on a **shared Linux flight computer** and sends takeoff, RC and landing commands through two Wi-Fi adapters. The drones retain their stock onboard firmware. Each camera localizes against mapped room AprilTags; the controller uses both position estimates to coordinate the duet. The same mission and dance policy run in the simulators. Optional offboard LFM3 phrase selection is connected to the local physics recorder and Linux flight adapter.
 
-**Current controller:** sustained partner turns, rises, dips and pauses can trigger a new response before the phrase timeout. Partner speed continuously adjusts phrase tempo and echo delay. This remains centralized control with two stateful policies. The linked MP4 records the earlier Ballet/Krump policy; the new dynamic behavior has been physics-checked but has not been rendered into a new video. [Dynamic validation](reports/dynamic-choreography-check.json).
+**Current controller:** optional **LFM3-1.7B through local Ollama** gives each dancer its own phrase-selection agent and short-term memory. Python retains trajectories, style, leadership and safety checks. Without `--llm-model`, sustained partner turns, rises, dips and pauses can trigger a new response before the phrase timeout. Partner speed continuously adjusts phrase tempo and echo delay. This remains centralized control with two stateful policies. The linked MP4 records the earlier Ballet/Krump policy; the new dynamic behavior has been physics-checked but has not been rendered into a new video. [Dynamic validation](reports/dynamic-choreography-check.json).
 
 ## The duet
 
@@ -26,11 +26,26 @@ Style persists through every response. Ballet smooths and elevates the partner�
 | Echo | Responds to the partner’s measured movement from 0.8–1.6 seconds earlier, depending on partner speed |
 | Reply | Captures a three-second partner motif and transforms it into a four-second answer |
 
-They trade the lead after sustained measured engagement, and the leader slows when the partner lags. This is feedback-driven, rule-based autonomy; no LFM inference is implemented. Both policies share state on the flight computer. The drones infer partner motion through their room-relative position estimates; they do not visually recognize each other or communicate directly.
+They trade the lead after sustained measured engagement, and the leader slows when the partner lags. Reactive rules provide the default behavior and fallback. With `--llm-model lfm3:latest`, two separate agents choose bounded phrases using local model inference. Both policies share state on the flight computer. The drones infer partner motion through their room-relative position estimates; they do not visually recognize each other or communicate directly.
 
 Targets allow up to 1.40 m of forward/back travel, 55 cm of lateral travel per lane and 84 cm of height travel. Ballet targets slew at 0.32 m/s and Krump targets at 0.80 m/s; firmware response and RC caps determine actual motion. In the recorded MP4’s seed-7 physics run, the drones traveled **0.85 m and 0.88 m forward/back**. Ballet stayed **35 cm higher on average**; Krump’s mean speed dropped **70% across its braking holds**. See [policy details](docs/choreography.md) for measured motion and interaction rules.
 
 Music: [“Five Armies” by Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The video uses an excerpt with loudness adjustment and fades. Music is added during encoding and does not drive or synchronize flight. [Full attribution and edit details](media/music/README.md).
+
+## Run LFM3 locally
+
+Ollama on the Mac serves the already installed `lfm3:latest` model (LFM3-1.7B, MLX backend). Use the simulation environment described below:
+
+```sh
+# Check the installed model and both dancer prompts.
+python -m duet.ollama_agent --llm-model lfm3:latest
+
+# Run a real-time physics flight with actual model decisions, without rendering.
+python -u -m duet.metal_record --simulate-only --llm-model lfm3:latest \
+  --output-dir outputs/lfm3-duet
+```
+
+The model chooses style-specific gestures when leading, or mirror/echo/reply when following, plus a small tempo adjustment. Inference runs asynchronously; invalid, expired or late answers are rejected and reactive rules continue. No model runs onboard the Tellos. [Architecture, deadlines and Linux-to-Mac connection](docs/lfm3.md) · [Actual model-run validation](reports/lfm3-check.json).
 
 ## Run with real drones
 
@@ -94,12 +109,13 @@ python -m unittest discover -s tests -v
 python -m duet.record --prepare-only
 ```
 
-The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks; ffmpeg/ffprobe enable the music-encoding check. **All 31 tests pass locally.** The checks cover style contrast in actual simulated motion, measured-motion responses, braking holds, takeoff/landing, flight guards, audio encoding and credits. Three nominal runs of the dynamic policy completed without drone contact; their smallest separation was **1.571 m**. The earlier video’s validation remains in its own provenance report. These checks use simulated sensing and do not replace physical flight validation.
+The flight environment runs policy, hardware-adapter and recorder-preparation checks. Installing `requirements-metal.txt` also enables the rigid-body and USD scene checks; ffmpeg/ffprobe enable the music-encoding check. **All 39 tests pass locally.** The checks cover style contrast in actual simulated motion, measured-motion responses, braking holds, takeoff/landing, flight guards, audio encoding and credits. Three nominal runs of the dynamic policy completed without drone contact; their smallest separation was **1.571 m**. The earlier video’s validation remains in its own provenance report. These checks use simulated sensing and do not replace physical flight validation.
 
 ## Code
 
 | Path | Purpose |
 | --- | --- |
+| `duet/ollama_agent.py` | Local model client, independent dancer contexts, bounded asynchronous inference |
 | `duet/choreography.py` | Dance styles, measured-motion responses, memory and role handoffs |
 | `duet/mission.py` | Mission phases, target smoothing and pair guards |
 | `duet/fly.py` | Linux two-drone deployment, telemetry, watchdog and flight logs |

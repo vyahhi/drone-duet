@@ -1,6 +1,6 @@
 """Two stateful dancer policies over measured room-relative motion.
 
-No LFM, shared sinusoidal dance script or image-based partner recognition. Each
+Optional offboard Ollama phrase agents; no image-based partner recognition. Each
 dancer has a style, motion memory and utility scores. A leadership lease avoids
 two followers waiting on each other; handoffs require measured engagement.
 """
@@ -72,11 +72,15 @@ class Dancer:
     candidate_motion: str = "still"
     candidate_since: float = 0.0
     cue: str = ""
+    llm_until: float = 0.0
+    llm_tempo: float = 1.0
+    decision_source: str = "rules"
 
 
 class Choreography:
-    def __init__(self, homes, seed, events):
+    def __init__(self, homes, seed, events, planner=None):
         self.homes, self.events = homes, events
+        self.planner = planner
         self.dancers = [Dancer(p, random.Random(seed + i * 1009)) for i, p in enumerate(STYLES)]
         self.dancers[1].mode = "mirror"
         self.history = deque(maxlen=320)  # 16 s at the 20 Hz policy rate
@@ -112,6 +116,7 @@ class Choreography:
                             "gesture": d.gesture, "partner": p.mode, "leader": self.leader,
                             "observed_partner_motion": d.observed, "reason": d.reason,
                             "trigger": d.cue or "phrase boundary",
+                            "decision_source": d.decision_source,
                             "tempo": round(d.tempo, 3), "echo_delay_s": round(d.echo_delay, 3),
                             "scores": {k: round(v, 3) for k, v in d.scores.items()}})
 
@@ -124,7 +129,7 @@ class Choreography:
         energy = min(1.0, d.partner_speed / 0.12)
         d.tempo = 0.90 + 0.20 * energy
         d.echo_delay = 1.60 - 0.80 * energy
-        d.accent_phase += dt * d.tempo
+        d.accent_phase += dt * d.tempo * d.llm_tempo
         if d.observed != d.candidate_motion:
             d.candidate_motion, d.candidate_since = d.observed, t
         dwell = 0.60 if d.candidate_motion == "still" else 0.30
@@ -133,7 +138,7 @@ class Choreography:
             d.cue = ("partner paused" if d.stable_motion == "still" else
                      f"partner changed from {previous} to {d.stable_motion}")
 
-    def _lead(self, i, t, wall_t, reason):
+    def _lead(self, i, t, wall_t, reason, choice=None):
         d = self.dancers[i]
         continuing = d.mode == "lead" and bool(d.gesture)
         d.observed, _ = self.motion(1 - i, t)
@@ -143,7 +148,10 @@ class Choreography:
         d.scores = {g: 1.0 / (1 + d.visits.get(g, 0)) + (0.5 if g == preferred else 0)
                    + d.rng.uniform(0, 0.15) - (0.5 if g == d.gesture else 0)
                    for g in d.profile.gestures}
-        d.gesture = max(d.scores, key=d.scores.get)
+        d.gesture = choice.action if choice else max(d.scores, key=d.scores.get)
+        d.decision_source = "ollama" if choice else "rules"
+        if choice is None:
+            d.llm_until, d.llm_tempo = 0.0, 1.0
         d.mode, d.since = "lead", t
         if not continuing:
             d.phrase = 0.0
@@ -151,7 +159,7 @@ class Choreography:
         d.reason = reason
         self._record(i, t, wall_t)
 
-    def _respond(self, i, t, wall_t, *, initial=False):
+    def _respond(self, i, t, wall_t, *, initial=False, choice=None):
         d = self.dancers[i]
         d.observed, speed = self.motion(1 - i, t)
         enough_history = t - self.history[0][0] >= 1.2
@@ -166,7 +174,10 @@ class Choreography:
         for mode, bias in zip(MOVES[1:], d.profile.response_bias):
             d.scores[mode] = bias + cues[mode] + 0.8 / (1 + d.visits.get(mode, 0)) \
                 - (0.8 if mode == d.mode else 0) + d.rng.uniform(0, 0.1)
-        d.mode = "mirror" if initial else max(d.scores, key=d.scores.get)
+        d.mode = choice.action if choice else ("mirror" if initial else max(d.scores, key=d.scores.get))
+        d.decision_source = "ollama" if choice else "rules"
+        if choice is None:
+            d.llm_until, d.llm_tempo = 0.0, 1.0
         d.gesture = self.dancers[1 - i].gesture
         d.since = t
         d.visits[d.mode] = d.visits.get(d.mode, 0) + 1
@@ -177,7 +188,54 @@ class Choreography:
         d.reason = {"mirror": "reflect partner's measured motion across the two lanes",
                     "echo": "follow partner's measured motion with a speed-adapted delay",
                     "reply": "answer a recorded partner motif in my own style"}[d.mode]
+        if choice:
+            d.reason = choice.reason
         self._record(i, t, wall_t)
+
+    def _model_step(self, t, wall_t):
+        if self.planner is None:
+            return
+        import time
+        from .ollama_agent import TEMPOS
+        for result in self.planner.drain():
+            i, context = result["drone"], result["context"]
+            d = self.dancers[i]
+            role = "leader" if i == self.leader else "follower"
+            rejection = result.get("error")
+            age = t - context["dance_t"]
+            if not rejection and (age < 0 or age > self.planner.max_age or
+                                  time.monotonic() - result["issued_wall"] > self.planner.max_age):
+                rejection = "stale observations"
+            if not rejection and (context["role"] != role or context["leader_since"] != self.leader_since):
+                rejection = "leadership changed since request"
+            if not rejection and d.mode == "reply" and t - d.since < 4.0:
+                rejection = "preserve captured reply until complete"
+            event = {"t": round(wall_t, 3), "dance_t": round(t, 3), "drone": i,
+                     "model_result": "rejected" if rejection else "applied",
+                     "model": self.planner.model, "observation_dance_t": context["dance_t"],
+                     "latency_s": result["latency_s"], "error": rejection,
+                     "inference": result.get("stats")}
+            if not rejection:
+                choice = result["choice"]
+                if role == "leader":
+                    self._lead(i, t, wall_t, choice.reason, choice=choice)
+                else:
+                    self._respond(i, t, wall_t, choice=choice)
+                d.llm_until, d.llm_tempo = t + 4.5, TEMPOS[choice.tempo]
+                self.planner.remember(i, choice)
+                event["choice"] = choice.__dict__
+            self.events.append(event)
+        for i, d in enumerate(self.dancers):
+            recent = [(round(at, 2), tuple(tuple(round(v, 3) for v in p) for p in offsets))
+                      for at, offsets in list(self.history)[-41::20]]
+            context = {"dance_t": round(t, 3), "role": "leader" if i == self.leader else "follower",
+                       "your_drone_index": i,
+                       "leader_since": self.leader_since, "your_mode": d.mode, "your_gesture": d.gesture,
+                       "partner_style": self.dancers[1-i].profile.style,
+                       "partner_motion": d.observed, "partner_speed_mps": round(d.partner_speed, 3),
+                       "partner_mode": self.dancers[1-i].mode, "pending_cue": d.cue,
+                       "measured_history": recent}
+            self.planner.submit(i, context)
 
     def _reply_offset(self, d, t):
         if len(d.reply) < 2 or d.reply[-1][0] <= 0:
@@ -237,6 +295,12 @@ class Choreography:
             self._respond(1, t, wall_t, initial=True)
         for i in range(2):
             self._observe(i, t, dt)
+            d = self.dancers[i]
+            if d.llm_until and t >= d.llm_until:
+                if i == self.leader:
+                    self._lead(i, t, wall_t, "model phrase expired; resume reactive rules")
+                else:
+                    self._respond(i, t, wall_t)
         follower = 1 - self.leader
         lead = self.dancers[self.leader]
         _, speed = self.motion(follower, t)
@@ -249,7 +313,7 @@ class Choreography:
             self._respond(previous, t, wall_t)
             self.events.append({"t": round(wall_t, 3), "dance_t": round(t, 3), "handoff": [previous, follower],
                                 "reason": "partner moving for at least 0.8 s; leadership lease released"})
-        elif t - lead.since >= 7.0 or (lead.cue and t - lead.since >= 5.0):
+        elif not lead.llm_until and (t - lead.since >= 7.0 or (lead.cue and t - lead.since >= 5.0)):
             self._lead(self.leader, t, wall_t, lead.cue or "vary my motif using partner motion and my move history")
         self.dancers[self.leader].cue = ""
         follower = 1 - self.leader
@@ -257,9 +321,10 @@ class Choreography:
         # Preserve a captured four-second reply; other responses can change after
         # three seconds when a debounced movement cue arrives. Timeouts prevent stalling.
         dwell = 4.0 if follow.mode == "reply" else 3.0
-        if t - follow.since >= 4.0 or (follow.cue and t - follow.since >= dwell):
+        if not follow.llm_until and (t - follow.since >= 4.0 or (follow.cue and t - follow.since >= dwell)):
             self._respond(follower, t, wall_t)
             follow.cue = ""
+        self._model_step(t, wall_t)
         result = []
         for i, d in enumerate(self.dancers):
             partner = self.sample(t, 1 - i)
@@ -270,7 +335,7 @@ class Choreography:
             if d.mode == "lead":
                 # Slow an invitation when the partner lags instead of blindly keeping time.
                 mismatch = math.dist(reflect(offsets[i]), partner)
-                d.phrase_rate = (0.70 if mismatch > 0.30 else 1.0) * d.tempo
+                d.phrase_rate = (0.70 if mismatch > 0.30 else 1.0) * d.tempo * d.llm_tempo
                 d.phrase += dt * d.phrase_rate
                 offset = self._lead_offset(d)
             elif d.mode == "mirror":
@@ -289,4 +354,6 @@ class Choreography:
                  "tempo": d.tempo, "echo_delay_s": d.echo_delay,
                  "partner_speed_mps": d.partner_speed, "stable_partner_motion": d.stable_motion,
                  "pending_cue": d.cue,
+                 "decision_source": d.decision_source, "model_phrase_until": d.llm_until,
+                 "model_tempo_multiplier": d.llm_tempo,
                  "hold": d.hold} for d in self.dancers]

@@ -99,3 +99,7 @@ python -m unittest discover -s tests -v
 Python tests cover deterministic partner replies, target bounds and slew limits across seeds, stale tracking, telemetry failures, prediction-based stopping, coordinate transforms, original-controller RC output, a simple kinematic closed-loop integration, calibration identity checks, watchdog behavior and original recorder patch/provenance generation. The kinematic test is not Isaac or a drone flight test.
 
 Organizer sources are fetched into ignored `vendor/action-space`, pinned and checked for tracked modifications before use. They are not bundled under this project’s MIT license. Their [THIRD_PARTY.md](https://github.com/jaromero3rd/Action_Space/blob/cd6536a458c3ba034a727ea00f57adac6bed9471/THIRD_PARTY.md) credits the BSD-3-Clause Tello URDF from Clyde McQueen and Peter Mullen’s `tello_ros`; assets and external runtimes retain their own terms.
+
+## Optional local LFM3 agents
+
+The Linux flight adapter accepts `--llm-model lfm3:latest` and warms both phrase agents before takeoff. To use Ollama on the Mac, connect through a loopback SSH tunnel from Linux. Model requests stay asynchronous; rejected or late decisions fall back to reactive rules. [Setup and model authority](lfm3.md). The original NVIDIA recorder remains on the reactive policy.

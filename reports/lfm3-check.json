@@ -1,0 +1,269 @@
+{
+  "model": {
+    "model": "lfm3:latest",
+    "url": "http://127.0.0.1:11434",
+    "mode": "asynchronous high-level phrase selection",
+    "digest": "f609fc0ab12a126dbb26d8ff621a4de89e4b25661ccc9b0a9110c018a7f3f2d4",
+    "details": {
+      "parent_model": "",
+      "format": "safetensors",
+      "family": "lfm3",
+      "families": null,
+      "parameter_size": "1.7B",
+      "quantization_level": "nvfp4",
+      "runner": "mlx"
+    },
+    "warmup": [
+      {
+        "drone": 0,
+        "choice": {
+          "action": "port_de_bras",
+          "tempo": "sustain",
+          "reason": "Partner still \u2192 open invitation to move together."
+        },
+        "wall_seconds": 2.3650836669985438,
+        "raw_content": "{\n \"action\": \"port_de_bras\",\n \"tempo\": \"sustain\",\n \"reason\": \"Partner still \u2192 open invitation to move together.\"\n}",
+        "eval_count": 38,
+        "total_duration_ns": 2363825334,
+        "model": "lfm3:latest"
+      },
+      {
+        "drone": 1,
+        "choice": {
+          "action": "reply",
+          "tempo": "match",
+          "reason": "Partner still \u2192 open invitation."
+        },
+        "wall_seconds": 2.001606375008123,
+        "raw_content": "{\n \"action\": \"reply\",\n \"tempo\":  \"match\",\n \"reason\": \"Partner still \u2192 open invitation.\"\n}",
+        "eval_count": 30,
+        "total_duration_ns": 1999831625,
+        "model": "lfm3:latest"
+      }
+    ]
+  },
+  "physics": "MuJoCo CPU, not Isaac PhysX",
+  "controller": "original TelloCascadeController + RcAction + swarm_formation.control",
+  "sensing": "original sighting() geometric model, no random noise, 150 ms delay",
+  "physical_flight_tested": false,
+  "video_rendered": false,
+  "completed": true,
+  "seed": 7,
+  "duration_s": 44.291666666666664,
+  "min_separation_m": 1.600000023841858,
+  "max_tilt_deg": 2.4103054214663704,
+  "drone_contacts": false,
+  "source_sha256": {
+    "duet/ollama_agent.py": "0a7a7ea6b5db60a6d931547f8675914e43bbe0243c27df7072aa4febf0ee2035",
+    "duet/choreography.py": "266b1bd1e180307409152c1c3f64ef9dbe2e2f29f2c8aa11b8de5e679b5728fd",
+    "duet/mission.py": "32af884d03af1b7855b55af731a1f93722c50ac372936b792e18ffd213c5c7dc",
+    "duet/fly.py": "821c2fff6733eba60abcaa3b455a631898d5d05ed1f38c46ddccb3d29c4054e7",
+    "duet/metal_record.py": "5b967d98795a5f50cdc538477d3194729fd3fffa4a25ef5114688007243b5a4e"
+  },
+  "timing": {
+    "realtime_physics": true,
+    "request_timeout_s": 4.0,
+    "max_observation_age_s": 4.5,
+    "model_choice_lifetime_s": 4.5,
+    "request_interval_min_dance_s": 3.0,
+    "latency_range_s": [
+      2.276229750001221,
+      3.419588457996724
+    ]
+  },
+  "results": {
+    "applied": 4,
+    "applied_by_drone": {
+      "0": 2,
+      "1": 2
+    },
+    "rejected": 5,
+    "rejection_reasons": {
+      "preserve captured reply until complete": 2,
+      "leadership changed since request": 3
+    }
+  },
+  "actual_dance_xyz_peak_to_peak_m": [
+    [
+      0.9572472923513886,
+      0.24509471895446922,
+      0.2974856325104278
+    ],
+    [
+      0.8888764614203426,
+      0.34220293096274734,
+      0.19721463146789264
+    ]
+  ],
+  "events": [
+    {
+      "t": 10.8,
+      "dance_t": 3.5,
+      "drone": 0,
+      "model_result": "applied",
+      "model": "lfm3:latest",
+      "observation_dance_t": 0.05,
+      "latency_s": 3.419588457996724,
+      "error": null,
+      "inference": {
+        "raw_content": "{\n  \"action\": \"adagio\" \n  ,\n  \"tempo\":  \"match\" \n  ,\n  \"reason\": \"Mirror = current (0.05), leader role, slow arc \u2014 no partner movement yet.\"\n}",
+        "eval_count": 53,
+        "total_duration_ns": 3415643542,
+        "model": "lfm3:latest"
+      },
+      "choice": {
+        "action": "adagio",
+        "tempo": "match",
+        "reason": "Mirror = current (0.05), leader role, slow arc \u2014 no partner movement yet."
+      }
+    },
+    {
+      "t": 13.95,
+      "dance_t": 6.65,
+      "drone": 1,
+      "model_result": "rejected",
+      "model": "lfm3:latest",
+      "observation_dance_t": 3.45,
+      "latency_s": 3.1705415830074344,
+      "error": "preserve captured reply until complete",
+      "inference": {
+        "raw_content": "{\n  \"action\": \"reply\",\n  \"tempo\":  \"match\" \n  ,\n  \"reason\": \"Your mode is 'reply' \u2014 transform the partner's rise into a counter-movement arc.\"\n}",
+        "eval_count": 51,
+        "total_duration_ns": 3147744875,
+        "model": "lfm3:latest"
+      }
+    },
+    {
+      "t": 16.55,
+      "dance_t": 9.25,
+      "drone": 0,
+      "model_result": "rejected",
+      "model": "lfm3:latest",
+      "observation_dance_t": 6.6,
+      "latency_s": 2.64639720901323,
+      "error": "leadership changed since request",
+      "inference": {
+        "raw_content": "{\n  \"action\": \"adagio\",\n  \"tempo\": \"match\",\n  \"reason\": \"Leader's adagio aligns with measured back motion; drone index 0 confirms lead. M\" \n}",
+        "eval_count": 47,
+        "total_duration_ns": 2626110166,
+        "model": "lfm3:latest"
+      }
+    },
+    {
+      "t": 19.9,
+      "dance_t": 12.6,
+      "drone": 1,
+      "model_result": "applied",
+      "model": "lfm3:latest",
+      "observation_dance_t": 9.2,
+      "latency_s": 3.35154462500941,
+      "error": null,
+      "inference": {
+        "raw_content": "{\n  \"action\": \"stomp\",\n  \"tempo\":  \"match\" \n  , \"reason\": \"Leader's jab meets classical ballet back \u2014 sync the sharp jab with an elegant, b\" \n  }",
+        "eval_count": 54,
+        "total_duration_ns": 3304047000,
+        "model": "lfm3:latest"
+      },
+      "choice": {
+        "action": "stomp",
+        "tempo": "match",
+        "reason": "Leader's jab meets classical ballet back \u2014 sync the sharp jab with an elegant, b"
+      }
+    },
+    {
+      "t": 22.15,
+      "dance_t": 14.85,
+      "drone": 0,
+      "model_result": "rejected",
+      "model": "lfm3:latest",
+      "observation_dance_t": 12.55,
+      "latency_s": 2.276229750001221,
+      "error": "leadership changed since request",
+      "inference": {
+        "raw_content": "{\"action\":\"reply\",\"tempo\":\"match\",\"reason\":\"Mirror mode echoes forward jab; transform into adagio arc.\"}",
+        "eval_count": 31,
+        "total_duration_ns": 2273883834,
+        "model": "lfm3:latest"
+      }
+    },
+    {
+      "t": 24.9,
+      "dance_t": 17.6,
+      "drone": 1,
+      "model_result": "applied",
+      "model": "lfm3:latest",
+      "observation_dance_t": 14.8,
+      "latency_s": 2.7601067920040805,
+      "error": null,
+      "inference": {
+        "raw_content": "{\n  \"action\": \"reply\",\n  \"tempo\": \"match\",\n  \"reason\": \"Echo mode mirrors forward motion; respond by matching the lead's classical flow.\"\n}",
+        "eval_count": 42,
+        "total_duration_ns": 2732416625,
+        "model": "lfm3:latest"
+      },
+      "choice": {
+        "action": "reply",
+        "tempo": "match",
+        "reason": "Echo mode mirrors forward motion; respond by matching the lead's classical flow."
+      }
+    },
+    {
+      "t": 27.3,
+      "dance_t": 20.0,
+      "drone": 0,
+      "model_result": "applied",
+      "model": "lfm3:latest",
+      "observation_dance_t": 17.55,
+      "latency_s": 2.4164062500058208,
+      "error": null,
+      "inference": {
+        "raw_content": "{\"action\":\"adagio\",\"tempo\":\"match\"  \n   \t\t,\"reason\":\"Elevated arc meets mirrored forward flow\u2014balance grace.\"}",
+        "eval_count": 34,
+        "total_duration_ns": 2404621792,
+        "model": "lfm3:latest"
+      },
+      "choice": {
+        "action": "adagio",
+        "tempo": "match",
+        "reason": "Elevated arc meets mirrored forward flow\u2014balance grace."
+      }
+    },
+    {
+      "t": 30.1,
+      "dance_t": 22.8,
+      "drone": 1,
+      "model_result": "rejected",
+      "model": "lfm3:latest",
+      "observation_dance_t": 19.95,
+      "latency_s": 2.810863499995321,
+      "error": "leadership changed since request",
+      "inference": {
+        "raw_content": "{\n  \"action\": \"reply\",\n  \"tempo\": \"match\",\n  \"reason\": \"Mirroring partner's forward motion via dance mode reply.\"\n}",
+        "eval_count": 39,
+        "total_duration_ns": 2795436709,
+        "model": "lfm3:latest"
+      }
+    },
+    {
+      "t": 32.75,
+      "dance_t": 25.45,
+      "drone": 0,
+      "model_result": "rejected",
+      "model": "lfm3:latest",
+      "observation_dance_t": 22.75,
+      "latency_s": 2.662543166006799,
+      "error": "preserve captured reply until complete",
+      "inference": {
+        "raw_content": "{\"action\": \"mirror\", \"tempo\": \"match\", \"reason\": \"Echoed forward chest pop; transform into adagio match.\"}",
+        "eval_count": 36,
+        "total_duration_ns": 2643258166,
+        "model": "lfm3:latest"
+      }
+    }
+  ],
+  "limitations": [
+    "One nominal live model-backed physics flight; not hardware validation or a robustness qualification.",
+    "Model reasons are generated text; action validity and safety are enforced by Python.",
+    "The existing MP4 predates LFM3 and is unchanged."
+  ]
+}

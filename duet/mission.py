@@ -40,7 +40,7 @@ class Mission:
     Lane 0 stays at negative Y; lane 1 at positive Y. No path crosses the other.
     """
 
-    def __init__(self, seed=7, dance_seconds=28.0):
+    def __init__(self, seed=7, dance_seconds=28.0, planner=None):
         if not 4 <= dance_seconds <= 28:
             raise ValueError("dance_seconds must be between 4 and 28")
         self.dance_seconds = dance_seconds
@@ -51,7 +51,7 @@ class Mission:
         self.moves = ["lead", "mirror"]
         self.targets = list(HOMES)
         self.events = []
-        self.choreography = Choreography(HOMES, seed, self.events)
+        self.choreography = Choreography(HOMES, seed, self.events, planner=planner)
         self.min_measured_gap = math.inf
 
     def stop(self, reason):
